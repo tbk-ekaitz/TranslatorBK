@@ -1,0 +1,75 @@
+# Multi-Model Translation Service Configuration
+
+# AI Models Configuration
+# Supported types: ollama, openai, anthropic, google
+models:
+  # Ollama Local Models
+  - name: llama3
+    type: ollama
+    model_id: llama3
+    weight: 1.0
+    enabled: true
+    timeout: 60
+
+  - name: qwen2
+    type: ollama
+    model_id: qwen2
+    weight: 1.0
+    enabled: true
+    timeout: 60
+
+  # OpenAI Models (uncomment and configure API key in .env)
+  # - name: gpt-4
+  #   type: openai
+  #   model_id: gpt-4-turbo-preview
+  #   weight: 1.5
+  #   enabled: false
+  #   timeout: 60
+
+  # - name: gpt-3.5
+  #   type: openai
+  #   model_id: gpt-3.5-turbo
+  #   weight: 1.0
+  #   enabled: false
+  #   timeout: 30
+
+  # Anthropic Models (uncomment and configure API key in .env)
+  # - name: claude-3-opus
+  #   type: anthropic
+  #   model_id: claude-3-opus-20240229
+  #   weight: 1.5
+  #   enabled: false
+  #   timeout: 60
+
+  # - name: claude-3-sonnet
+  #   type: anthropic
+  #   model_id: claude-3-sonnet-20240229
+  #   weight: 1.2
+  #   enabled: false
+  #   timeout: 60
+
+  # Google Models (uncomment and configure API key in .env)
+  # - name: gemini-pro
+  #   type: google
+  #   model_id: gemini-pro
+  #   weight: 1.0
+  #   enabled: false
+  #   timeout: 60
+
+# Translation Configuration per Target Language
+translation:
+  ru:  # Russian
+    system_prompt: "You are a professional translator specializing in Russian translations. Translate the following text accurately, naturally, and idiomatically into Russian."
+    temperature: 0.3
+    max_tokens: 2000
+
+  kk:  # Kazakh
+    system_prompt: "You are a professional translator specializing in Kazakh translations. Translate the following text accurately, naturally, and idiomatically into Kazakh."
+    temperature: 0.3
+    max_tokens: 2000
+
+# Evaluation Settings
+# Note: These are overridden by environment variables if set
+evaluation:
+  method: consensus  # Options: consensus, scoring, weighted_vote
+  consensus_threshold: 0.7  # Similarity threshold for grouping translations (0.0-1.0)
