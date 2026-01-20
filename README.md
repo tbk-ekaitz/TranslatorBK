@@ -182,34 +182,34 @@ EVALUATION_METHOD=consensus
 
 ### View Logs
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### View Specific Service Logs
 ```bash
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f ollama
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f ollama
 ```
 
 ### Stop the System
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Stop and Remove All Data
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Restart Services
 ```bash
-docker-compose restart
+docker compose restart
 ```
 
 ### Rebuild After Code Changes
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## Adding New Models
@@ -250,7 +250,7 @@ models:
 
 3. Restart the backend:
 ```bash
-docker-compose restart backend
+docker compose restart backend
 ```
 
 ## Project Structure
@@ -279,7 +279,7 @@ TranslatorBK/
 │   └── Dockerfile
 ├── config.yaml            # Model and translation configuration
 ├── .env.example          # Example environment variables
-├── docker-compose.yml    # Docker Compose configuration
+├── docker compose.yml    # Docker Compose configuration
 ├── start.sh             # Linux/Mac startup script
 ├── start.bat            # Windows startup script
 └── README.md            # This file
@@ -347,7 +347,7 @@ exit
 
 ### Port Already in Use
 
-If ports 3000, 8000, or 11434 are already in use, edit `docker-compose.yml` to use different ports:
+If ports 3000, 8000, or 11434 are already in use, edit `docker compose.yml` to use different ports:
 
 ```yaml
 services:
@@ -360,7 +360,7 @@ services:
 
 Check logs for errors:
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 Ensure Docker has enough resources allocated (8GB+ RAM recommended).
@@ -368,7 +368,7 @@ Ensure Docker has enough resources allocated (8GB+ RAM recommended).
 ### Translation Fails
 
 1. Check that Ollama models are downloaded: `docker exec translator-ollama ollama list`
-2. Verify backend can reach Ollama: `docker-compose logs backend`
+2. Verify backend can reach Ollama: `docker compose logs backend`
 3. Check API keys if using external models
 
 ## Performance Optimization
@@ -390,7 +390,7 @@ Ensure Docker has enough resources allocated (8GB+ RAM recommended).
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly with `docker-compose up --build`
+4. Test thoroughly with `docker compose up --build`
 5. Submit a pull request
 
 ## License

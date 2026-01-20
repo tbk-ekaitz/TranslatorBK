@@ -24,7 +24,7 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+if ! docker compose version &> /dev/null; then
     echo -e "${RED}Error: Docker Compose is not installed.${NC}"
     echo "Please install Docker Compose from https://docs.docker.com/compose/install/"
     exit 1
@@ -46,7 +46,7 @@ echo -e "${GREEN}Starting services...${NC}"
 echo ""
 
 # Start Docker Compose
-docker-compose up -d
+docker compose up -d
 
 echo ""
 echo -e "${GREEN}Services are starting up...${NC}"
@@ -98,11 +98,11 @@ echo -e "  ${GREEN}Backend API:${NC} http://localhost:8000"
 echo -e "  ${GREEN}API Docs:${NC} http://localhost:8000/docs"
 echo ""
 echo "To view logs:"
-echo "  docker-compose logs -f"
+echo "  docker compose logs -f"
 echo ""
 echo "To stop the system:"
-echo "  docker-compose down"
+echo "  docker compose down"
 echo ""
 echo "To stop and remove all data:"
-echo "  docker-compose down -v"
+echo "  docker compose down -v"
 echo ""

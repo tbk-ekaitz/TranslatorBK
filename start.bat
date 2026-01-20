@@ -17,7 +17,7 @@ if errorlevel 1 (
 )
 
 REM Check if Docker Compose is installed
-docker-compose --version >nul 2>&1
+docker compose --version >nul 2>&1
 if errorlevel 1 (
     docker compose version >nul 2>&1
     if errorlevel 1 (
@@ -45,7 +45,7 @@ echo Starting services...
 echo.
 
 REM Start Docker Compose
-docker-compose up -d
+docker compose up -d
 
 echo.
 echo Services are starting up...
@@ -100,12 +100,12 @@ echo   Backend API: http://localhost:8000
 echo   API Docs: http://localhost:8000/docs
 echo.
 echo To view logs:
-echo   docker-compose logs -f
+echo   docker compose logs -f
 echo.
 echo To stop the system:
-echo   docker-compose down
+echo   docker compose down
 echo.
 echo To stop and remove all data:
-echo   docker-compose down -v
+echo   docker compose down -v
 echo.
 pause
