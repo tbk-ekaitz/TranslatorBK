@@ -1,8 +1,8 @@
 """Configuration management for the translation service."""
 import os
 import yaml
-from typing import Dict, List, Optional
-from pydantic import BaseModel
+from typing import Dict, List, Optional, Union
+from pydantic import BaseModel, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -36,13 +36,21 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://ollama:11434"
 
     # Application settings
-    cors_origins: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    cors_origins: Union[str, List[str]] = "http://localhost:5173,http://localhost:3000"
     cache_enabled: bool = True
     log_translations: bool = True
 
     # Evaluation settings
     evaluation_method: str = "consensus"  # 'consensus', 'llm_judge', 'scoring'
     consensus_threshold: float = 0.7
+
+    @field_validator('cors_origins', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS origins from string or list."""
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        return v
 
     class Config:
         env_file = ".env"
