@@ -5,54 +5,86 @@
 # Note: Each model specifies which target languages (ru, kk) and source languages (en, zh-TW) it supports
 
 models:
-  # ===== ISSAI Tilmash - Specialized Translation Model =====
-  # Best for: Pure translation (English → Russian/Kazakh)
-  # Note: Does NOT support Chinese (zh-TW) as source language
-  - name: tilmash
-    type: ollama
-    model_id: tilmash  # Run: ollama pull issai/tilmash
-    weight: 1.5  # Higher weight - specialized translation model
-    enabled: true
-    timeout: 60
-    supported_target_languages: ["ru", "kk"]  # Supports both Russian and Kazakh
-    supported_source_languages: ["en"]  # Only supports English (not Chinese!)
-
-  # ===== ISSAI Qolda - Lightweight Multimodal Model =====
-  # Best for: Fast translation with limited resources, supports both source languages
-  # Size: 4.3B parameters (runs on laptops)
-  - name: qolda
-    type: ollama
-    model_id: qolda  # Run: ollama pull issai/qolda
-    weight: 1.2
-    enabled: true
-    timeout: 60
-    supported_target_languages: ["ru", "kk"]  # Excellent for both
-    supported_source_languages: ["en", "zh-TW"]  # Supports both English and Chinese
-
-  # ===== ISSAI KazLLM-8B - Kazakh National Model =====
-  # Best for: High-quality Kazakh and Russian, cultural context
-  # Size: 8B parameters
-  - name: kazllm-8b
-    type: ollama
-    model_id: kazllm-8b  # Run: ollama pull issai/llama-3.1-kazllm-1.0-8b
-    weight: 1.3
-    enabled: true
-    timeout: 90
-    supported_target_languages: ["ru", "kk"]  # Excellent for both
-    supported_source_languages: ["en", "zh-TW"]  # Supports both
-
-  # ===== T-pro-it-2.0 - Advanced Russian Reasoning Model =====
+  # ===== T-pro-it-2.0 - Advanced Russian Reasoning Model (Ollama) =====
   # Best for: Complex Russian translations with reasoning
   # Size: 33B parameters (requires powerful hardware)
-  # Note: Limited Kazakh support - only use for Russian
+  # Note: Excellent for Russian, limited Kazakh support
+  # Download: ollama pull t-tech/t-pro-it-2.0:q4_k_m
   - name: t-pro-it-2.0
     type: ollama
-    model_id: t-pro-it-2.0  # Run: ollama pull t-tech/t-pro-it-2.0
-    weight: 1.4
-    enabled: false  # Disabled by default (high hardware requirements)
+    model_id: t-tech/t-pro-it-2.0:q4_k_m
+    weight: 1.5
+    enabled: true
     timeout: 120
     supported_target_languages: ["ru"]  # Only Russian (Kazakh is limited)
     supported_source_languages: ["en", "zh-TW"]  # Supports both
+
+  # ===== Llama 3.1 - General Purpose Multilingual Model (Ollama) =====
+  # Best for: Kazakh translations, general multilingual support
+  # Size: Available in multiple sizes (8B, 70B)
+  # Download: ollama pull llama3.1
+  - name: llama3.1
+    type: ollama
+    model_id: llama3.1
+    weight: 1.2
+    enabled: true
+    timeout: 90
+    supported_target_languages: ["ru", "kk"]  # Supports both
+    supported_source_languages: ["en", "zh-TW"]  # Supports both
+
+  # ===== Qwen 2.5 - Multilingual Model with Good CJK Support (Ollama) =====
+  # Best for: Chinese source texts, multilingual support
+  # Size: Available in multiple sizes
+  # Download: ollama pull qwen2.5
+  - name: qwen2.5
+    type: ollama
+    model_id: qwen2.5
+    weight: 1.2
+    enabled: true
+    timeout: 90
+    supported_target_languages: ["ru", "kk"]  # Supports both
+    supported_source_languages: ["en", "zh-TW"]  # Excellent Chinese support
+
+  # ===== DeepSeek V2.5 - Coding & Multilingual Model (Ollama) =====
+  # Best for: Technical translations
+  # Download: ollama pull deepseek-v2.5
+  - name: deepseek-v2.5
+    type: ollama
+    model_id: deepseek-v2.5
+    weight: 1.1
+    enabled: false  # Disabled by default
+    timeout: 90
+    supported_target_languages: ["ru", "kk"]
+    supported_source_languages: ["en", "zh-TW"]
+
+  # ===== ISSAI Models (Hugging Face - Manual Integration Required) =====
+  # These models are NOT available in Ollama and require custom integration
+  # See documentation below for integration instructions
+
+  # ISSAI Tilmash - Specialized Translation Model
+  # ⚠️ GATED MODEL: Requires Hugging Face account approval
+  # URL: https://huggingface.co/issai/tilmash
+  # NOT AVAILABLE IN OLLAMA - Requires transformers integration
+  # - name: tilmash
+  #   type: huggingface  # Would need custom implementation
+  #   model_id: issai/tilmash
+  #   ...
+
+  # ISSAI Qolda - Lightweight Multimodal Model
+  # Available via Docker: https://github.com/IS2AI/Qolda-deployment
+  # NOT AVAILABLE IN OLLAMA
+  # - name: qolda
+  #   type: huggingface
+  #   model_id: issai/Qolda
+  #   ...
+
+  # ISSAI KazLLM-8B - Kazakh National Model
+  # Available as GGUF: https://huggingface.co/issai/LLama-3.1-KazLLM-1.0-8B-GGUF4
+  # NOT AVAILABLE IN OLLAMA (could use with llama.cpp)
+  # - name: kazllm-8b
+  #   type: llamacpp  # Would need custom implementation
+  #   model_id: issai/LLama-3.1-KazLLM-1.0-8B-GGUF4
+  #   ...
 
   # ===== Example: OpenAI Models (if you have API key) =====
   # - name: gpt-4
@@ -88,42 +120,83 @@ translation:
     max_tokens: 2000
 
 # Evaluation Settings
-# Note: These are overridden by environment variables if set
 evaluation:
   method: consensus  # Options: consensus, scoring, weighted_vote
   consensus_threshold: 0.7  # Similarity threshold for grouping translations (0.0-1.0)
 
 # ================================================================================
-# Model Download Instructions:
+# OLLAMA MODEL DOWNLOAD INSTRUCTIONS:
 # ================================================================================
 #
-# 1. ISSAI Tilmash (Required - smallest, fastest):
-#    docker exec translator-ollama ollama pull issai/tilmash
+# These models are CONFIRMED to work with Ollama:
 #
-# 2. ISSAI Qolda (Recommended - lightweight, multimodal):
-#    docker exec translator-ollama ollama pull issai/qolda
+# 1. T-pro-it-2.0 (Russian specialist, 33B - requires 20GB+ VRAM):
+#    ollama pull t-tech/t-pro-it-2.0:q4_k_m
 #
-# 3. ISSAI KazLLM-8B (Recommended - best quality for Kazakh):
-#    docker exec translator-ollama ollama pull issai/llama-3.1-kazllm-1.0-8b
+# 2. Llama 3.1 (Multilingual, 8B):
+#    ollama pull llama3.1
 #
-# 4. T-pro-it-2.0 (Optional - requires 20-40GB VRAM):
+# 3. Qwen 2.5 (Multilingual with excellent Chinese support):
+#    ollama pull qwen2.5
+#
+# 4. DeepSeek V2.5 (Optional - technical translations):
+#    ollama pull deepseek-v2.5
+#
+# Run these commands AFTER starting the Docker containers:
+#    docker exec translator-ollama ollama pull llama3.1
+#    docker exec translator-ollama ollama pull qwen2.5
 #    docker exec translator-ollama ollama pull t-tech/t-pro-it-2.0:q4_k_m
 #
 # ================================================================================
-# Model Selection Guide:
+# ISSAI MODELS - ADVANCED SETUP (OPTIONAL):
 # ================================================================================
 #
-# For ENGLISH → RUSSIAN/KAZAKH:
-#   - Tilmash: Excellent (specialized translation model)
-#   - Qolda: Very good (fast, lightweight)
-#   - KazLLM-8B: Excellent (especially for Kazakh)
-#   - T-pro-it-2.0: Excellent for Russian (skip for Kazakh)
+# The specialized ISSAI models (Tilmash, Qolda, KazLLM) are NOT available in Ollama.
+# They require custom integration:
 #
-# For CHINESE → RUSSIAN/KAZAKH:
-#   - Tilmash: NOT SUPPORTED (will be skipped automatically)
-#   - Qolda: Very good (supports Chinese)
-#   - KazLLM-8B: Excellent (supports Chinese)
-#   - T-pro-it-2.0: Excellent for Russian (limited for Kazakh)
+# Option 1: Use ISSAI Qolda via Docker
+#   git clone https://github.com/IS2AI/Qolda-deployment
+#   cd Qolda-deployment
+#   docker-compose up -d
+#   # Then modify backend to call Qolda's API
+#
+# Option 2: Use KazLLM-8B with llama.cpp (GGUF)
+#   # Download GGUF from: https://huggingface.co/issai/LLama-3.1-KazLLM-1.0-8B-GGUF4
+#   # Run with llama.cpp server
+#   # Modify backend to call llama.cpp API
+#
+# Option 3: Use Tilmash (requires HF approval)
+#   1. Go to https://huggingface.co/issai/tilmash
+#   2. Click "Access repository" and accept conditions
+#   3. Wait for approval
+#   4. Integrate via transformers in Python backend
+#
+# For now, the system uses general-purpose Ollama models that work well
+# for Kazakh and Russian translations.
+#
+# ================================================================================
+# MODEL SELECTION GUIDE:
+# ================================================================================
+#
+# For ENGLISH → RUSSIAN:
+#   - T-pro-it-2.0: Excellent (specialized Russian model)
+#   - Llama 3.1: Very good
+#   - Qwen 2.5: Very good
+#
+# For ENGLISH → KAZAKH:
+#   - Llama 3.1: Very good (best general-purpose for Kazakh)
+#   - Qwen 2.5: Very good
+#   - T-pro-it-2.0: Limited (not recommended for Kazakh)
+#
+# For CHINESE → RUSSIAN:
+#   - Qwen 2.5: Excellent (best Chinese support)
+#   - T-pro-it-2.0: Very good
+#   - Llama 3.1: Good
+#
+# For CHINESE → KAZAKH:
+#   - Qwen 2.5: Excellent (best for Chinese → Kazakh)
+#   - Llama 3.1: Very good
 #
 # The system automatically selects compatible models based on source/target languages.
 # ================================================================================
+

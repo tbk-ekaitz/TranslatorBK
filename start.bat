@@ -78,9 +78,20 @@ echo Checking if required models are installed...
 echo.
 
 REM Check and pull required models for Kazakh/Russian translation
-call :check_model tilmash issai/tilmash
-call :check_model qolda issai/qolda
-call :check_model kazllm-8b issai/llama-3.1-kazllm-1.0-8b
+echo Downloading Ollama models for translation...
+echo.
+
+call :check_model llama3.1 llama3.1
+call :check_model qwen2.5 qwen2.5
+call :check_model t-pro-it-2.0 t-tech/t-pro-it-2.0:q4_k_m
+
+echo.
+echo Model installation complete!
+echo.
+echo Note: T-pro-it-2.0 requires significant resources (20GB+ VRAM).
+echo If it failed, you can still use llama3.1 and qwen2.5 for translations.
+echo.
+
 goto :after_models
 
 :check_model
@@ -93,12 +104,14 @@ if errorlevel 1 (
     docker exec translator-ollama ollama pull %pull_cmd%
     if errorlevel 1 (
         echo Failed to install model '%model_name%'
+        echo Continuing anyway - other models may still work
     ) else (
         echo Model '%model_name%' installed successfully
     )
 ) else (
     echo Model '%model_name%' is already installed
 )
+echo.
 goto :eof
 
 :after_models

@@ -75,12 +75,15 @@ echo "Checking if required models are installed..."
 echo ""
 
 # Check and pull required models for Kazakh/Russian translation
-# Format: "display_name:pull_command"
+# These models are confirmed to work with Ollama
 declare -A MODELS=(
-    ["tilmash"]="issai/tilmash"
-    ["qolda"]="issai/qolda"
-    ["kazllm-8b"]="issai/llama-3.1-kazllm-1.0-8b"
+    ["llama3.1"]="llama3.1"
+    ["qwen2.5"]="qwen2.5"
+    ["t-pro-it-2.0"]="t-tech/t-pro-it-2.0:q4_k_m"
 )
+
+echo -e "${GREEN}Downloading Ollama models for translation...${NC}"
+echo ""
 
 for MODEL_NAME in "${!MODELS[@]}"; do
     PULL_CMD="${MODELS[$MODEL_NAME]}"
@@ -90,14 +93,23 @@ for MODEL_NAME in "${!MODELS[@]}"; do
     else
         echo -e "${YELLOW}Downloading model '$MODEL_NAME' ($PULL_CMD)...${NC}"
         echo -e "${YELLOW}This may take a while depending on model size and your internet speed.${NC}"
+
         docker exec translator-ollama ollama pull "$PULL_CMD"
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}✓ Model '$MODEL_NAME' installed successfully${NC}"
         else
             echo -e "${RED}✗ Failed to install model '$MODEL_NAME'${NC}"
+            echo -e "${YELLOW}  Continuing anyway - other models may still work${NC}"
         fi
     fi
+    echo ""
 done
+
+echo -e "${GREEN}Model installation complete!${NC}"
+echo ""
+echo -e "${YELLOW}Note: T-pro-it-2.0 requires significant resources (20GB+ VRAM).${NC}"
+echo -e "${YELLOW}If it failed, you can still use llama3.1 and qwen2.5 for translations.${NC}"
+echo ""
 
 echo ""
 echo -e "${GREEN}=========================================="
