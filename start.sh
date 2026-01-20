@@ -74,16 +74,28 @@ echo ""
 echo "Checking if required models are installed..."
 echo ""
 
-# Check and pull required models
-MODELS=("llama3" "qwen2")
+# Check and pull required models for Kazakh/Russian translation
+# Format: "display_name:pull_command"
+declare -A MODELS=(
+    ["tilmash"]="issai/tilmash"
+    ["qolda"]="issai/qolda"
+    ["kazllm-8b"]="issai/llama-3.1-kazllm-1.0-8b"
+)
 
-for MODEL in "${MODELS[@]}"; do
-    if docker exec translator-ollama ollama list | grep -q "$MODEL"; then
-        echo -e "${GREEN}✓ Model '$MODEL' is already installed${NC}"
+for MODEL_NAME in "${!MODELS[@]}"; do
+    PULL_CMD="${MODELS[$MODEL_NAME]}"
+
+    if docker exec translator-ollama ollama list | grep -q "$MODEL_NAME"; then
+        echo -e "${GREEN}✓ Model '$MODEL_NAME' is already installed${NC}"
     else
-        echo -e "${YELLOW}Downloading model '$MODEL'... This may take a while.${NC}"
-        docker exec translator-ollama ollama pull "$MODEL"
-        echo -e "${GREEN}✓ Model '$MODEL' installed successfully${NC}"
+        echo -e "${YELLOW}Downloading model '$MODEL_NAME' ($PULL_CMD)...${NC}"
+        echo -e "${YELLOW}This may take a while depending on model size and your internet speed.${NC}"
+        docker exec translator-ollama ollama pull "$PULL_CMD"
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}✓ Model '$MODEL_NAME' installed successfully${NC}"
+        else
+            echo -e "${RED}✗ Failed to install model '$MODEL_NAME'${NC}"
+        fi
     fi
 done
 

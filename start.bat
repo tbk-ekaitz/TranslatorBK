@@ -77,17 +77,31 @@ echo.
 echo Checking if required models are installed...
 echo.
 
-REM Check and pull required models
-for %%M in (llama3 qwen2) do (
-    docker exec translator-ollama ollama list | find "%%M" >nul 2>&1
+REM Check and pull required models for Kazakh/Russian translation
+call :check_model tilmash issai/tilmash
+call :check_model qolda issai/qolda
+call :check_model kazllm-8b issai/llama-3.1-kazllm-1.0-8b
+goto :after_models
+
+:check_model
+set model_name=%1
+set pull_cmd=%2
+docker exec translator-ollama ollama list | find "%model_name%" >nul 2>&1
+if errorlevel 1 (
+    echo Downloading model '%model_name%' ^(%pull_cmd%^)...
+    echo This may take a while depending on model size and your internet speed.
+    docker exec translator-ollama ollama pull %pull_cmd%
     if errorlevel 1 (
-        echo Downloading model '%%M'... This may take a while.
-        docker exec translator-ollama ollama pull %%M
-        echo Model '%%M' installed successfully
+        echo Failed to install model '%model_name%'
     ) else (
-        echo Model '%%M' is already installed
+        echo Model '%model_name%' installed successfully
     )
+) else (
+    echo Model '%model_name%' is already installed
 )
+goto :eof
+
+:after_models
 
 echo.
 echo ==========================================

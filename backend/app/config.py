@@ -16,6 +16,8 @@ class ModelConfig(BaseModel):
     api_key: Optional[str] = None
     base_url: Optional[str] = None
     timeout: int = 60
+    supported_target_languages: List[str] = ["ru", "kk"]  # Which target languages this model supports
+    supported_source_languages: List[str] = ["en", "zh-TW"]  # Which source languages this model supports
 
 
 class TranslationConfig(BaseModel):
@@ -98,6 +100,38 @@ class ConfigManager:
     def get_enabled_models(self) -> List[ModelConfig]:
         """Get list of enabled models."""
         return [m for m in self.models if m.enabled]
+
+    def get_models_for_translation(
+        self,
+        source_lang: str,
+        target_lang: str
+    ) -> List[ModelConfig]:
+        """
+        Get list of enabled models that support the specified source and target languages.
+
+        Args:
+            source_lang: Source language code (e.g., 'en', 'zh-TW')
+            target_lang: Target language code (e.g., 'ru', 'kk')
+
+        Returns:
+            List of models that support this language pair
+        """
+        compatible_models = []
+        for model in self.models:
+            if not model.enabled:
+                continue
+
+            # Check if model supports the target language
+            if target_lang not in model.supported_target_languages:
+                continue
+
+            # Check if model supports the source language
+            if source_lang not in model.supported_source_languages:
+                continue
+
+            compatible_models.append(model)
+
+        return compatible_models
 
     def get_translation_config(self, target_lang: str) -> TranslationConfig:
         """Get translation config for a specific target language."""

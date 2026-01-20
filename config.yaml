@@ -1,70 +1,88 @@
 # Multi-Model Translation Service Configuration
+# For Kazakh and Russian translation
 
 # AI Models Configuration
-# Supported types: ollama, openai, anthropic, google
+# Note: Each model specifies which target languages (ru, kk) and source languages (en, zh-TW) it supports
+
 models:
-  # Ollama Local Models
-  - name: llama3
+  # ===== ISSAI Tilmash - Specialized Translation Model =====
+  # Best for: Pure translation (English → Russian/Kazakh)
+  # Note: Does NOT support Chinese (zh-TW) as source language
+  - name: tilmash
     type: ollama
-    model_id: llama3
-    weight: 1.0
+    model_id: tilmash  # Run: ollama pull issai/tilmash
+    weight: 1.5  # Higher weight - specialized translation model
     enabled: true
     timeout: 60
+    supported_target_languages: ["ru", "kk"]  # Supports both Russian and Kazakh
+    supported_source_languages: ["en"]  # Only supports English (not Chinese!)
 
-  - name: qwen2
+  # ===== ISSAI Qolda - Lightweight Multimodal Model =====
+  # Best for: Fast translation with limited resources, supports both source languages
+  # Size: 4.3B parameters (runs on laptops)
+  - name: qolda
     type: ollama
-    model_id: qwen2
-    weight: 1.0
+    model_id: qolda  # Run: ollama pull issai/qolda
+    weight: 1.2
     enabled: true
     timeout: 60
+    supported_target_languages: ["ru", "kk"]  # Excellent for both
+    supported_source_languages: ["en", "zh-TW"]  # Supports both English and Chinese
 
-  # OpenAI Models (uncomment and configure API key in .env)
+  # ===== ISSAI KazLLM-8B - Kazakh National Model =====
+  # Best for: High-quality Kazakh and Russian, cultural context
+  # Size: 8B parameters
+  - name: kazllm-8b
+    type: ollama
+    model_id: kazllm-8b  # Run: ollama pull issai/llama-3.1-kazllm-1.0-8b
+    weight: 1.3
+    enabled: true
+    timeout: 90
+    supported_target_languages: ["ru", "kk"]  # Excellent for both
+    supported_source_languages: ["en", "zh-TW"]  # Supports both
+
+  # ===== T-pro-it-2.0 - Advanced Russian Reasoning Model =====
+  # Best for: Complex Russian translations with reasoning
+  # Size: 33B parameters (requires powerful hardware)
+  # Note: Limited Kazakh support - only use for Russian
+  - name: t-pro-it-2.0
+    type: ollama
+    model_id: t-pro-it-2.0  # Run: ollama pull t-tech/t-pro-it-2.0
+    weight: 1.4
+    enabled: false  # Disabled by default (high hardware requirements)
+    timeout: 120
+    supported_target_languages: ["ru"]  # Only Russian (Kazakh is limited)
+    supported_source_languages: ["en", "zh-TW"]  # Supports both
+
+  # ===== Example: OpenAI Models (if you have API key) =====
   # - name: gpt-4
   #   type: openai
   #   model_id: gpt-4-turbo-preview
   #   weight: 1.5
   #   enabled: false
   #   timeout: 60
+  #   supported_target_languages: ["ru", "kk"]
+  #   supported_source_languages: ["en", "zh-TW"]
 
-  # - name: gpt-3.5
-  #   type: openai
-  #   model_id: gpt-3.5-turbo
-  #   weight: 1.0
-  #   enabled: false
-  #   timeout: 30
-
-  # Anthropic Models (uncomment and configure API key in .env)
+  # ===== Example: Anthropic Models (if you have API key) =====
   # - name: claude-3-opus
   #   type: anthropic
   #   model_id: claude-3-opus-20240229
   #   weight: 1.5
   #   enabled: false
   #   timeout: 60
-
-  # - name: claude-3-sonnet
-  #   type: anthropic
-  #   model_id: claude-3-sonnet-20240229
-  #   weight: 1.2
-  #   enabled: false
-  #   timeout: 60
-
-  # Google Models (uncomment and configure API key in .env)
-  # - name: gemini-pro
-  #   type: google
-  #   model_id: gemini-pro
-  #   weight: 1.0
-  #   enabled: false
-  #   timeout: 60
+  #   supported_target_languages: ["ru", "kk"]
+  #   supported_source_languages: ["en", "zh-TW"]
 
 # Translation Configuration per Target Language
 translation:
   ru:  # Russian
-    system_prompt: "You are a professional translator specializing in Russian translations. Translate the following text accurately, naturally, and idiomatically into Russian."
+    system_prompt: "You are a professional translator specializing in Russian translations. Translate the following text accurately, naturally, and idiomatically into Russian. Preserve the meaning, tone, and style of the original text."
     temperature: 0.3
     max_tokens: 2000
 
   kk:  # Kazakh
-    system_prompt: "You are a professional translator specializing in Kazakh translations. Translate the following text accurately, naturally, and idiomatically into Kazakh."
+    system_prompt: "You are a professional translator specializing in Kazakh translations. Translate the following text accurately, naturally, and idiomatically into Kazakh (Cyrillic script). Preserve the meaning, tone, cultural context, and style of the original text."
     temperature: 0.3
     max_tokens: 2000
 
@@ -73,3 +91,38 @@ translation:
 evaluation:
   method: consensus  # Options: consensus, scoring, weighted_vote
   consensus_threshold: 0.7  # Similarity threshold for grouping translations (0.0-1.0)
+
+# ================================================================================
+# Model Download Instructions:
+# ================================================================================
+#
+# 1. ISSAI Tilmash (Required - smallest, fastest):
+#    docker exec translator-ollama ollama pull issai/tilmash
+#
+# 2. ISSAI Qolda (Recommended - lightweight, multimodal):
+#    docker exec translator-ollama ollama pull issai/qolda
+#
+# 3. ISSAI KazLLM-8B (Recommended - best quality for Kazakh):
+#    docker exec translator-ollama ollama pull issai/llama-3.1-kazllm-1.0-8b
+#
+# 4. T-pro-it-2.0 (Optional - requires 20-40GB VRAM):
+#    docker exec translator-ollama ollama pull t-tech/t-pro-it-2.0:q4_k_m
+#
+# ================================================================================
+# Model Selection Guide:
+# ================================================================================
+#
+# For ENGLISH → RUSSIAN/KAZAKH:
+#   - Tilmash: Excellent (specialized translation model)
+#   - Qolda: Very good (fast, lightweight)
+#   - KazLLM-8B: Excellent (especially for Kazakh)
+#   - T-pro-it-2.0: Excellent for Russian (skip for Kazakh)
+#
+# For CHINESE → RUSSIAN/KAZAKH:
+#   - Tilmash: NOT SUPPORTED (will be skipped automatically)
+#   - Qolda: Very good (supports Chinese)
+#   - KazLLM-8B: Excellent (supports Chinese)
+#   - T-pro-it-2.0: Excellent for Russian (limited for Kazakh)
+#
+# The system automatically selects compatible models based on source/target languages.
+# ================================================================================

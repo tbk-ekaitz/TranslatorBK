@@ -87,13 +87,21 @@ async def translate(request: TranslationRequest):
             detail="Source language must be 'en' (English) or 'zh-TW' (Traditional Chinese)"
         )
 
-    # Get enabled models
-    models = config_manager.get_enabled_models()
+    # Get models compatible with each target language
+    russian_models = config_manager.get_models_for_translation(
+        source_lang=request.source_language,
+        target_lang='ru'
+    )
 
-    if not models:
+    kazakh_models = config_manager.get_models_for_translation(
+        source_lang=request.source_language,
+        target_lang='kk'
+    )
+
+    if not russian_models and not kazakh_models:
         raise HTTPException(
             status_code=503,
-            detail="No translation models are currently enabled"
+            detail=f"No translation models are available for source language '{request.source_language}'"
         )
 
     # Get translation configs for target languages
@@ -107,74 +115,111 @@ async def translate(request: TranslationRequest):
     )
 
     try:
-        # Translate to both languages concurrently
-        russian_translations_task = translator_service.translate_with_all_models(
-            models=models,
-            text=request.text,
-            source_lang=request.source_language,
-            target_lang='ru',
-            config=russian_config
-        )
+        # Translate to both languages concurrently (only if models are available)
+        tasks = []
 
-        kazakh_translations_task = translator_service.translate_with_all_models(
-            models=models,
-            text=request.text,
-            source_lang=request.source_language,
-            target_lang='kk',
-            config=kazakh_config
-        )
+        if russian_models:
+            russian_translations_task = translator_service.translate_with_all_models(
+                models=russian_models,
+                text=request.text,
+                source_lang=request.source_language,
+                target_lang='ru',
+                config=russian_config
+            )
+            tasks.append(russian_translations_task)
+        else:
+            tasks.append(asyncio.sleep(0))  # Dummy task
+
+        if kazakh_models:
+            kazakh_translations_task = translator_service.translate_with_all_models(
+                models=kazakh_models,
+                text=request.text,
+                source_lang=request.source_language,
+                target_lang='kk',
+                config=kazakh_config
+            )
+            tasks.append(kazakh_translations_task)
+        else:
+            tasks.append(asyncio.sleep(0))  # Dummy task
 
         # Wait for both to complete
-        russian_translations, kazakh_translations = await asyncio.gather(
-            russian_translations_task,
-            kazakh_translations_task
-        )
+        results = await asyncio.gather(*tasks)
 
-        # Check if we got any translations
-        if not russian_translations:
+        # Extract translations based on what was actually processed
+        russian_translations = results[0] if russian_models else []
+        kazakh_translations = results[1] if kazakh_models else []
+
+        # Check if we got any translations for languages with available models
+        if russian_models and not russian_translations:
             raise HTTPException(
                 status_code=503,
-                detail="All models failed to translate to Russian"
+                detail="All Russian models failed to translate"
             )
 
-        if not kazakh_translations:
+        if kazakh_models and not kazakh_translations:
             raise HTTPException(
                 status_code=503,
-                detail="All models failed to translate to Kazakh"
+                detail="All Kazakh models failed to translate"
             )
 
         # Evaluate and select best translations
-        model_weights = {m.name: m.weight for m in models}
+        # Build model weights from all available models
+        all_models = russian_models + kazakh_models
+        model_weights = {m.name: m.weight for m in all_models}
 
-        best_russian, russian_confidence = evaluator.evaluate(
-            russian_translations,
-            model_weights
-        )
+        # Evaluate Russian translations if available
+        if russian_translations:
+            best_russian, russian_confidence = evaluator.evaluate(
+                russian_translations,
+                model_weights
+            )
+            russian_result = TranslationResult(
+                target_language="ru",
+                best_translation=best_russian.translation,
+                all_translations=russian_translations,
+                evaluation_method=config_manager.settings.evaluation_method,
+                evaluation_score=russian_confidence
+            )
+        else:
+            # No models available for Russian
+            russian_result = TranslationResult(
+                target_language="ru",
+                best_translation=f"No models available for Russian from {request.source_language}",
+                all_translations=[],
+                evaluation_method=config_manager.settings.evaluation_method,
+                evaluation_score=0.0
+            )
 
-        best_kazakh, kazakh_confidence = evaluator.evaluate(
-            kazakh_translations,
-            model_weights
-        )
+        # Evaluate Kazakh translations if available
+        if kazakh_translations:
+            best_kazakh, kazakh_confidence = evaluator.evaluate(
+                kazakh_translations,
+                model_weights
+            )
+            kazakh_result = TranslationResult(
+                target_language="kk",
+                best_translation=best_kazakh.translation,
+                all_translations=kazakh_translations,
+                evaluation_method=config_manager.settings.evaluation_method,
+                evaluation_score=kazakh_confidence
+            )
+        else:
+            # No models available for Kazakh
+            kazakh_result = TranslationResult(
+                target_language="kk",
+                best_translation=f"No models available for Kazakh from {request.source_language}",
+                all_translations=[],
+                evaluation_method=config_manager.settings.evaluation_method,
+                evaluation_score=0.0
+            )
 
         # Calculate total processing time
         total_time = time.time() - start_time
 
         # Build response
         response = TranslationResponse(
-            russian=TranslationResult(
-                target_language="ru",
-                best_translation=best_russian.translation,
-                all_translations=russian_translations,
-                evaluation_method=config_manager.settings.evaluation_method,
-                evaluation_score=russian_confidence
-            ),
-            kazakh=TranslationResult(
-                target_language="kk",
-                best_translation=best_kazakh.translation,
-                all_translations=kazakh_translations,
-                evaluation_method=config_manager.settings.evaluation_method,
-                evaluation_score=kazakh_confidence
-            ),
+            russian=russian_result,
+            kazakh=kazakh_result,
             source_language=request.source_language,
             source_text=request.text,
             total_processing_time=total_time
@@ -184,8 +229,14 @@ async def translate(request: TranslationRequest):
         if config_manager.settings.log_translations:
             print(f"Translation completed in {total_time:.2f}s")
             print(f"  Source ({request.source_language}): {request.text[:50]}...")
-            print(f"  Russian: {best_russian.translation[:50]}... (confidence: {russian_confidence:.2f})")
-            print(f"  Kazakh: {best_kazakh.translation[:50]}... (confidence: {kazakh_confidence:.2f})")
+            if russian_translations:
+                print(f"  Russian: {russian_result.best_translation[:50]}... (confidence: {russian_result.evaluation_score:.2f})")
+            else:
+                print(f"  Russian: Not available")
+            if kazakh_translations:
+                print(f"  Kazakh: {kazakh_result.best_translation[:50]}... (confidence: {kazakh_result.evaluation_score:.2f})")
+            else:
+                print(f"  Kazakh: Not available")
 
         return response
 
