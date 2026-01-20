@@ -75,14 +75,15 @@ models:
   #   supported_source_languages: ["en", "zh-TW"]
 
 # Translation Configuration per Target Language
+# System prompts are written in the target language for better model performance
 translation:
-  ru:  # Russian
-    system_prompt: "You are a professional translator specializing in Russian translations. Translate the following text accurately, naturally, and idiomatically into Russian. Preserve the meaning, tone, and style of the original text."
+  ru:  # Russian - Prompt in Russian
+    system_prompt: "Вы профессиональный переводчик, специализирующийся на переводах на русский язык. Переведите следующий текст точно, естественно и идиоматично на русский язык. Сохраните смысл, тон и стиль исходного текста. Предоставьте ТОЛЬКО перевод, без пояснений или дополнительного текста."
     temperature: 0.3
     max_tokens: 2000
 
-  kk:  # Kazakh
-    system_prompt: "You are a professional translator specializing in Kazakh translations. Translate the following text accurately, naturally, and idiomatically into Kazakh (Cyrillic script). Preserve the meaning, tone, cultural context, and style of the original text."
+  kk:  # Kazakh - Prompt in Kazakh (Cyrillic)
+    system_prompt: "Сіз қазақ тіліне аударуға маманданған кәсіби аудармашысыз. Келесі мәтінді қазақ тіліне (кирилл жазуында) дәл, табиғи және идиоматикалық түрде аударыңыз. Түпнұсқа мәтіннің мағынасын, үнін, мәдени контекстін және стилін сақтаңыз. ТЕК аударманы ұсыныңыз, түсініктемелерсіз немесе қосымша мәтінсіз."
     temperature: 0.3
     max_tokens: 2000
 
