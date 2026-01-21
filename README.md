@@ -50,28 +50,19 @@ cd TranslatorBK
 
 ### 2. Add KazLLM-8B GGUF Model (If You Have It)
 
-If you already have the `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` file (~5GB), place it in the project directory and run:
+If you already have the `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` file (~5GB), simply place it in the `TranslatorBK/` directory:
 
-**Linux/Mac:**
-```bash
-docker volume create translatorbk_kazllm_models
-docker run --rm \
-  -v "$(pwd):/source" \
-  -v translatorbk_kazllm_models:/models \
-  alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
+```
+TranslatorBK/
+├── llama-3.1-kazllm-1.0-8b-q4_k_m.gguf  ← Place the file here
+├── config.yaml
+├── docker-compose.yml
+├── start.sh
+├── start.bat
+└── ...
 ```
 
-**Windows (PowerShell):**
-```powershell
-docker volume create translatorbk_kazllm_models
-docker run --rm -v "${PWD}:/source" -v translatorbk_kazllm_models:/models alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
-```
-
-**Windows (Command Prompt):**
-```cmd
-docker volume create translatorbk_kazllm_models
-docker run --rm -v "%cd%:/source" -v translatorbk_kazllm_models:/models alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
-```
+**The startup script will automatically copy it to Docker when you run `./start.sh` or `start.bat`.**
 
 > **Note**: If you don't have the GGUF file, the system will show an error with download instructions when you try to start it. You can also disable the KazLLM model in `config.yaml` by setting `enabled: false` for the `kazllm-8b` model.
 >
@@ -376,15 +367,7 @@ You have two options:
 
 **Option 1: Add the GGUF file** (if you have it)
 
-Place the `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` file in the project directory and run:
-
-```bash
-docker volume create translatorbk_kazllm_models
-docker run --rm \
-  -v "$(pwd):/source" \
-  -v translatorbk_kazllm_models:/models \
-  alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
-```
+Place the `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` file in the `TranslatorBK/` directory and run `./start.sh` (or `start.bat` on Windows) again. The script will automatically copy it to Docker.
 
 **Option 2: Disable the model** (if you don't have it)
 

@@ -44,6 +44,8 @@ if not exist .env (
 echo Step 1: Checking KazLLM-8B model configuration...
 echo.
 
+set GGUF_FILENAME=llama-3.1-kazllm-1.0-8b-q4_k_m.gguf
+
 REM Check if KazLLM model is enabled in config.yaml
 set KAZLLM_ENABLED=false
 if exist "config.yaml" (
@@ -56,40 +58,56 @@ if exist "config.yaml" (
     )
 )
 
-REM Check if KazLLM GGUF file exists in Docker volume
-docker volume create translatorbk_kazllm_models >nul 2>&1
-docker run --rm -v translatorbk_kazllm_models:/models alpine test -f /models/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf >nul 2>&1
-set KAZLLM_EXISTS=%errorlevel%
-
-REM Validate configuration
+REM Only proceed if model is enabled
 if "%KAZLLM_ENABLED%"=="true" (
-    if not "%KAZLLM_EXISTS%"=="0" (
-        echo ==========================================
-        echo ERROR: KazLLM-8B GGUF file not found
-        echo ==========================================
-        echo.
-        echo The KazLLM-8B model is enabled in config.yaml but the GGUF file is missing.
-        echo.
-        echo You have two options:
-        echo.
-        echo Option 1: Add the GGUF file
-        echo   If you have llama-3.1-kazllm-1.0-8b-q4_k_m.gguf file, run:
-        echo.
-        echo     docker volume create translatorbk_kazllm_models
-        echo     docker run --rm ^
-        echo       -v "%cd%:/source" ^
-        echo       -v translatorbk_kazllm_models:/models ^
-        echo       alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
-        echo.
-        echo Option 2: Disable the model
-        echo   Edit config.yaml and set 'enabled: false' for kazllm-8b model
-        echo.
-        echo For download instructions, see: DOWNLOAD_KAZLLM.md
-        echo.
-        pause
-        exit /b 1
+    REM Create Docker volume
+    docker volume create translatorbk_kazllm_models >nul 2>&1
+
+    REM Check if GGUF exists in Docker volume
+    docker run --rm -v translatorbk_kazllm_models:/models alpine test -f /models/%GGUF_FILENAME% >nul 2>&1
+    set KAZLLM_IN_VOLUME=%errorlevel%
+
+    if "%KAZLLM_IN_VOLUME%"=="0" (
+        echo [32m✓ KazLLM-8B GGUF file found in Docker volume[0m
     ) else (
-        echo [32m✓ KazLLM-8B GGUF file found and model is enabled[0m
+        REM Check if GGUF file exists in current directory
+        if exist "%GGUF_FILENAME%" (
+            echo [33mFound %GGUF_FILENAME% in current directory[0m
+            echo [33mCopying to Docker volume...[0m
+
+            docker run --rm -v "%cd%:/source" -v translatorbk_kazllm_models:/models alpine cp /source/%GGUF_FILENAME% /models/
+
+            if not errorlevel 1 (
+                echo [32m✓ GGUF file successfully copied to Docker volume[0m
+            ) else (
+                echo [31m✗ Failed to copy GGUF file to Docker volume[0m
+                pause
+                exit /b 1
+            )
+        ) else (
+            REM GGUF not found anywhere
+            echo ==========================================
+            echo ERROR: KazLLM-8B GGUF file not found
+            echo ==========================================
+            echo.
+            echo The KazLLM-8B model is enabled but the GGUF file is missing.
+            echo.
+            echo You have two options:
+            echo.
+            echo Option 1: Add the GGUF file
+            echo   Place the file '%GGUF_FILENAME%' in this directory:
+            echo   %cd%\%GGUF_FILENAME%
+            echo.
+            echo   Then run this script again. The file will be automatically copied to Docker.
+            echo.
+            echo Option 2: Disable the model
+            echo   Edit config.yaml and set 'enabled: false' for kazllm-8b model
+            echo.
+            echo For download instructions, see: DOWNLOAD_KAZLLM.md
+            echo.
+            pause
+            exit /b 1
+        )
     )
 ) else (
     echo [33m⊘ KazLLM-8B model is disabled in config.yaml (skipping)[0m

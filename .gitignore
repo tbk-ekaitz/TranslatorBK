@@ -56,3 +56,6 @@ logs/
 
 # OS
 Thumbs.db
+
+# GGUF models (too large for git, ~5GB)
+*.gguf

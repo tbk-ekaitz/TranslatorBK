@@ -11,6 +11,8 @@ Username/Password Authentication
 
 ## ✅ Solution: 3 Methods to Download
 
+> **💡 Quick Tip**: After downloading the GGUF file using any method below, simply place it in the `TranslatorBK/` directory and run `./start.sh` (or `start.bat` on Windows). The startup script will automatically copy it to Docker for you!
+
 ---
 
 ## Method 1: Use Download Script with Token (Easiest)
@@ -94,7 +96,19 @@ huggingface-cli download \
   --local-dir ./kazllm-model
 ```
 
-### Step 4: Copy to Docker Volume
+### Step 4: Move to Project Directory
+
+**Option A (Recommended - Automatic):**
+```bash
+# Move the file to TranslatorBK directory
+mv ./kazllm-model/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf TranslatorBK/
+
+# Run startup script - it will automatically copy to Docker
+cd TranslatorBK
+./start.sh  # Linux/Mac or start.bat on Windows
+```
+
+**Option B (Manual - Advanced):**
 ```bash
 docker volume create translatorbk_kazllm_models
 
@@ -137,18 +151,20 @@ This creates `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` in your current directory (~5
 
 ### Import Model (On Another Machine)
 
-If someone shares the GGUF file with you:
+If someone shares the GGUF file with you, simply place it in the `TranslatorBK/` directory:
 
 ```bash
-# Create volume
-docker volume create translatorbk_kazllm_models
+# Place the file in the project directory
+mv llama-3.1-kazllm-1.0-8b-q4_k_m.gguf TranslatorBK/
 
-# Import the file
-docker run --rm \
-  -v "$(pwd):/source" \
-  -v translatorbk_kazllm_models:/models \
-  alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
+# Run the startup script - it will automatically copy to Docker
+cd TranslatorBK
+./start.sh  # Linux/Mac
+# or
+start.bat   # Windows
 ```
+
+The startup script will detect the file and automatically copy it to the Docker volume.
 
 ---
 
