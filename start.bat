@@ -114,7 +114,37 @@ if "%KAZLLM_ENABLED%"=="true" (
 )
 
 echo.
-echo Step 2: Starting Docker services...
+echo Step 2: Detecting CUDA availability...
+echo.
+
+REM Detect if CUDA/GPU is available
+set CUDA_AVAILABLE=false
+set COMPOSE_FILE=docker-compose.yml
+
+REM Try to detect NVIDIA GPU using nvidia-smi
+nvidia-smi >nul 2>&1
+if not errorlevel 1 (
+    set CUDA_AVAILABLE=true
+    echo [32m✓ NVIDIA GPU detected (CUDA available)[0m
+    echo [33m  Using docker-compose.yml (GPU-accelerated)[0m
+    set COMPOSE_FILE=docker-compose.yml
+) else (
+    REM Try Docker GPU test
+    docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi >nul 2>&1
+    if not errorlevel 1 (
+        set CUDA_AVAILABLE=true
+        echo [32m✓ NVIDIA GPU detected via Docker (CUDA available)[0m
+        echo [33m  Using docker-compose.yml (GPU-accelerated)[0m
+        set COMPOSE_FILE=docker-compose.yml
+    ) else (
+        echo [33m⊘ No NVIDIA GPU detected (CUDA not available)[0m
+        echo [33m  Using docker-compose.cpu.yml (CPU-only mode)[0m
+        set COMPOSE_FILE=docker-compose.cpu.yml
+    )
+)
+
+echo.
+echo Step 3: Starting Docker services...
 echo.
 
 REM Check if any ISSAI models are enabled (kazllm-8b or qolda)
@@ -151,10 +181,10 @@ if exist "config.yaml" (
 REM Start Docker Compose with or without ISSAI profile
 if "%USE_ISSAI_PROFILE%"=="true" (
     echo [33mStarting with ISSAI models (llamacpp/qolda)...[0m
-    docker compose --profile issai up -d
+    docker compose -f "%COMPOSE_FILE%" --profile issai up -d
 ) else (
     echo [33mStarting core services only (Ollama models)...[0m
-    docker compose up -d
+    docker compose -f "%COMPOSE_FILE%" up -d
 )
 
 echo.
