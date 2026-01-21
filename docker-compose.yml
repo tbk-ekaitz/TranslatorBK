@@ -65,9 +65,12 @@ services:
       start_period: 5s
 
   # Llama.cpp server for KazLLM-8B GGUF model
+  # OPTIONAL: Only starts if kazllm-8b is enabled in config.yaml
+  # Enable with: docker compose --profile issai up -d
   llamacpp:
     image: ghcr.io/ggerganov/llama.cpp:server
     container_name: translator-llamacpp
+    profiles: ["issai"]  # Optional service - start with --profile issai
     volumes:
       - kazllm_models:/models
     ports:
@@ -91,9 +94,12 @@ services:
       start_period: 60s
 
   # ISSAI Qolda multimodal model
+  # OPTIONAL: Docker image not publicly available
+  # Enable with: docker compose --profile issai up -d
   qolda:
     image: issai/qolda:latest
     container_name: translator-qolda
+    profiles: ["issai"]  # Optional service - requires custom Docker image
     ports:
       - "8081:8000"
     networks:

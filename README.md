@@ -48,25 +48,25 @@ git clone <repository-url>
 cd TranslatorBK
 ```
 
-### 2. Add KazLLM-8B GGUF Model (If You Have It)
+### 2. (Optional) Add ISSAI Specialized Models
 
-If you already have the `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` file (~5GB), simply place it in the `TranslatorBK/` directory:
+The system works out-of-the-box with **Ollama models** (llama3.1, qwen2.5, t-pro-it-2.0). ISSAI models are **optional** and **disabled by default**.
 
-```
-TranslatorBK/
-├── llama-3.1-kazllm-1.0-8b-q4_k_m.gguf  ← Place the file here
-├── config.yaml
-├── docker-compose.yml
-├── start.sh
-├── start.bat
-└── ...
-```
+#### KazLLM-8B (Optional - Best for Kazakh)
 
-**The startup script will automatically copy it to Docker when you run `./start.sh` or `start.bat`.**
+If you have the `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` file (~5GB):
 
-> **Note**: If you don't have the GGUF file, the system will show an error with download instructions when you try to start it. You can also disable the KazLLM model in `config.yaml` by setting `enabled: false` for the `kazllm-8b` model.
->
-> For detailed download instructions, see [DOWNLOAD_KAZLLM.md](DOWNLOAD_KAZLLM.md)
+1. Place it in the `TranslatorBK/` directory
+2. Edit `config.yaml` and set `kazllm-8b` → `enabled: true`
+3. Run `./start.sh` or `start.bat`
+
+The startup script will automatically copy it to Docker.
+
+> For download instructions with Hugging Face authentication, see [DOWNLOAD_KAZLLM.md](DOWNLOAD_KAZLLM.md)
+
+#### Qolda (Optional - Requires Custom Deployment)
+
+Qolda Docker image is not publicly available. See [ISSAI_MODELS.md](ISSAI_MODELS.md) for advanced setup.
 
 ### 3. Configure Environment (Optional)
 

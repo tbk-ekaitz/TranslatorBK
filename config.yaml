@@ -60,13 +60,14 @@ models:
   # ===== ISSAI KazLLM-8B - Kazakh National Model (via llama.cpp) =====
   # Best for: Professional Kazakh translations, cultural context
   # Size: 8B parameters (~5GB GGUF Q4_K_M)
-  # Download: Run ./scripts/download-kazllm.sh first
+  # Setup: Place llama-3.1-kazllm-1.0-8b-q4_k_m.gguf in TranslatorBK/ directory
+  # See DOWNLOAD_KAZLLM.md for download instructions
   - name: kazllm-8b
     type: llamacpp
     model_id: llama-3.1-kazllm-1.0-8b-q4_k_m
     base_url: http://llamacpp:8080
     weight: 1.6  # Higher weight - specialized Kazakh model
-    enabled: true
+    enabled: false  # Disabled by default - enable after adding GGUF file
     timeout: 90
     supported_target_languages: ["ru", "kk"]  # Excellent for both
     supported_source_languages: ["en", "zh-TW"]  # Supports both
@@ -74,13 +75,14 @@ models:
   # ===== ISSAI Qolda - Lightweight Multimodal Model (Docker) =====
   # Best for: Fast translation with multimodal capabilities
   # Size: 4.3B parameters (very efficient)
-  # Automatically deployed via Docker
+  # NOTE: Docker image not publicly available - requires custom deployment
+  # See https://github.com/IS2AI/Qolda-deployment for setup
   - name: qolda
     type: qolda
     model_id: issai/Qolda
     base_url: http://qolda:8000
     weight: 1.3
-    enabled: true
+    enabled: false  # Disabled by default - Docker image not publicly available
     timeout: 60
     supported_target_languages: ["ru", "kk"]  # Excellent for both
     supported_source_languages: ["en", "zh-TW"]  # Supports both

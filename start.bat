@@ -117,8 +117,33 @@ echo.
 echo Step 2: Starting Docker services...
 echo.
 
-REM Start Docker Compose
-docker compose up -d
+REM Check if any ISSAI models are enabled (kazllm-8b or qolda)
+set USE_ISSAI_PROFILE=false
+if exist "config.yaml" (
+    findstr /C:"name: kazllm-8b" config.yaml >nul 2>&1
+    if not errorlevel 1 (
+        findstr /C:"enabled: true" config.yaml >nul 2>&1
+        if not errorlevel 1 (
+            set USE_ISSAI_PROFILE=true
+        )
+    )
+    findstr /C:"name: qolda" config.yaml >nul 2>&1
+    if not errorlevel 1 (
+        findstr /C:"enabled: true" config.yaml >nul 2>&1
+        if not errorlevel 1 (
+            set USE_ISSAI_PROFILE=true
+        )
+    )
+)
+
+REM Start Docker Compose with or without ISSAI profile
+if "%USE_ISSAI_PROFILE%"=="true" (
+    echo [33mStarting with ISSAI models (llamacpp/qolda)...[0m
+    docker compose --profile issai up -d
+) else (
+    echo [33mStarting core services only (Ollama models)...[0m
+    docker compose up -d
+)
 
 echo.
 echo Services are starting up...

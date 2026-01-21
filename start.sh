@@ -118,8 +118,25 @@ echo ""
 echo -e "${GREEN}Step 2: Starting Docker services...${NC}"
 echo ""
 
-# Start Docker Compose
-docker compose up -d
+# Check if any ISSAI models are enabled (kazllm-8b or qolda)
+USE_ISSAI_PROFILE=false
+if [ -f "config.yaml" ]; then
+    if grep -A 3 "name: kazllm-8b" config.yaml | grep -q "enabled: true"; then
+        USE_ISSAI_PROFILE=true
+    fi
+    if grep -A 3 "name: qolda" config.yaml | grep -q "enabled: true"; then
+        USE_ISSAI_PROFILE=true
+    fi
+fi
+
+# Start Docker Compose with or without ISSAI profile
+if [ "$USE_ISSAI_PROFILE" = true ]; then
+    echo -e "${YELLOW}Starting with ISSAI models (llamacpp/qolda)...${NC}"
+    docker compose --profile issai up -d
+else
+    echo -e "${YELLOW}Starting core services only (Ollama models)...${NC}"
+    docker compose up -d
+fi
 
 echo ""
 echo -e "${GREEN}Services are starting up...${NC}"
