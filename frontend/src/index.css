@@ -132,7 +132,14 @@ body {
   border-color: var(--text-disabled);
   color: var(--text-secondary);
   opacity: 0.6;
-  cursor: not-allowed;
+  cursor: pointer;
+  user-select: none;
+}
+
+.input-container textarea.disabled:hover {
+  opacity: 0.7;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.05);
 }
 
 .output-group {

@@ -35,6 +35,25 @@ export default function TranslationPanel() {
     }
   };
 
+  // Handle double click to unlock a disabled input
+  const handleDoubleClick = (inputType) => {
+    // If this input is currently disabled (another is active), unlock it
+    if (activeInput && activeInput !== inputType) {
+      setActiveInput(inputType);
+      // Clear the previously active input
+      if (inputType === 'en') {
+        setChineseText('');
+      } else {
+        setEnglishText('');
+      }
+      // Clear outputs and error
+      setRussianText('');
+      setKazakhText('');
+      setError(null);
+      setMetadata(null);
+    }
+  };
+
   // Handle text change
   const handleTextChange = (inputType, value) => {
     if (inputType === 'en') {
@@ -134,9 +153,10 @@ export default function TranslationPanel() {
               onChange={(e) => handleTextChange('en', e.target.value)}
               onFocus={() => handleInputFocus('en')}
               onClick={() => handleInputFocus('en')}
+              onDoubleClick={() => handleDoubleClick('en')}
               className={activeInput === 'zh-TW' ? 'disabled' : ''}
               disabled={activeInput === 'zh-TW'}
-              placeholder="Enter English text here..."
+              placeholder="Enter English text here... (Double-click to unlock if disabled)"
             />
           </div>
 
@@ -152,9 +172,10 @@ export default function TranslationPanel() {
               onChange={(e) => handleTextChange('zh-TW', e.target.value)}
               onFocus={() => handleInputFocus('zh-TW')}
               onClick={() => handleInputFocus('zh-TW')}
+              onDoubleClick={() => handleDoubleClick('zh-TW')}
               className={activeInput === 'en' ? 'disabled' : ''}
               disabled={activeInput === 'en'}
-              placeholder="在此輸入繁體中文..."
+              placeholder="在此輸入繁體中文... (雙擊解鎖若被禁用)"
             />
           </div>
         </div>
