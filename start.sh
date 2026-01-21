@@ -42,17 +42,54 @@ if [ ! -f .env ]; then
     fi
 fi
 
-echo -e "${GREEN}Step 1: Downloading KazLLM-8B model (if needed)...${NC}"
+echo -e "${GREEN}Step 1: Checking KazLLM-8B model configuration...${NC}"
 echo ""
 
-# Download KazLLM model
-if [ -f "./scripts/download-kazllm.sh" ]; then
-    ./scripts/download-kazllm.sh
-    if [ $? -ne 0 ]; then
-        echo -e "${YELLOW}Warning: KazLLM download had issues, but continuing...${NC}"
+# Check if KazLLM model is enabled in config.yaml
+KAZLLM_ENABLED=false
+if [ -f "config.yaml" ]; then
+    # Simple grep to check if kazllm-8b is enabled
+    if grep -A 3 "name: kazllm-8b" config.yaml | grep -q "enabled: true"; then
+        KAZLLM_ENABLED=true
     fi
-else
-    echo -e "${YELLOW}Warning: KazLLM download script not found. Skipping...${NC}"
+fi
+
+# Check if KazLLM GGUF file exists in Docker volume
+KAZLLM_EXISTS=false
+docker volume create translatorbk_kazllm_models > /dev/null 2>&1 || true
+if docker run --rm -v translatorbk_kazllm_models:/models alpine test -f /models/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf 2>/dev/null; then
+    KAZLLM_EXISTS=true
+fi
+
+# Validate configuration
+if [ "$KAZLLM_ENABLED" = true ] && [ "$KAZLLM_EXISTS" = false ]; then
+    echo -e "${RED}=========================================="
+    echo "ERROR: KazLLM-8B GGUF file not found"
+    echo "==========================================${NC}"
+    echo ""
+    echo -e "${YELLOW}The KazLLM-8B model is enabled in config.yaml but the GGUF file is missing.${NC}"
+    echo ""
+    echo "You have two options:"
+    echo ""
+    echo -e "${GREEN}Option 1: Add the GGUF file${NC}"
+    echo "  If you have llama-3.1-kazllm-1.0-8b-q4_k_m.gguf file, run:"
+    echo ""
+    echo "    docker volume create translatorbk_kazllm_models"
+    echo "    docker run --rm \\"
+    echo "      -v \"\$(pwd):/source\" \\"
+    echo "      -v translatorbk_kazllm_models:/models \\"
+    echo "      alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/"
+    echo ""
+    echo -e "${GREEN}Option 2: Disable the model${NC}"
+    echo "  Edit config.yaml and set 'enabled: false' for kazllm-8b model"
+    echo ""
+    echo "For download instructions, see: DOWNLOAD_KAZLLM.md"
+    echo ""
+    exit 1
+elif [ "$KAZLLM_ENABLED" = true ] && [ "$KAZLLM_EXISTS" = true ]; then
+    echo -e "${GREEN}✓ KazLLM-8B GGUF file found and model is enabled${NC}"
+elif [ "$KAZLLM_ENABLED" = false ]; then
+    echo -e "${YELLOW}⊘ KazLLM-8B model is disabled in config.yaml (skipping)${NC}"
 fi
 
 echo ""

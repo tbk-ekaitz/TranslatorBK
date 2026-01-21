@@ -48,7 +48,36 @@ git clone <repository-url>
 cd TranslatorBK
 ```
 
-### 2. Configure Environment (Optional)
+### 2. Add KazLLM-8B GGUF Model (If You Have It)
+
+If you already have the `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` file (~5GB), place it in the project directory and run:
+
+**Linux/Mac:**
+```bash
+docker volume create translatorbk_kazllm_models
+docker run --rm \
+  -v "$(pwd):/source" \
+  -v translatorbk_kazllm_models:/models \
+  alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
+```
+
+**Windows (PowerShell):**
+```powershell
+docker volume create translatorbk_kazllm_models
+docker run --rm -v "${PWD}:/source" -v translatorbk_kazllm_models:/models alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
+```
+
+**Windows (Command Prompt):**
+```cmd
+docker volume create translatorbk_kazllm_models
+docker run --rm -v "%cd%:/source" -v translatorbk_kazllm_models:/models alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
+```
+
+> **Note**: If you don't have the GGUF file, the system will show an error with download instructions when you try to start it. You can also disable the KazLLM model in `config.yaml` by setting `enabled: false` for the `kazllm-8b` model.
+>
+> For detailed download instructions, see [DOWNLOAD_KAZLLM.md](DOWNLOAD_KAZLLM.md)
+
+### 3. Configure Environment (Optional)
 
 If you plan to use external API models (OpenAI, Anthropic, Google), copy the example environment file and add your API keys:
 
@@ -59,7 +88,7 @@ cp .env.example .env
 
 The system works out-of-the-box with local Ollama models without any API keys.
 
-### 3. Start the System
+### 4. Start the System
 
 **Linux/Mac:**
 ```bash
@@ -78,7 +107,7 @@ The startup script will:
 - Download required Ollama models (llama3, qwen2)
 - Display access URLs when ready
 
-### 4. Access the Application
+### 5. Access the Application
 
 Once started, access the application at:
 
@@ -333,6 +362,40 @@ Get list of configured models and their status.
 For full API documentation, visit http://localhost:8000/docs when the system is running.
 
 ## Troubleshooting
+
+### KazLLM-8B GGUF File Not Found
+
+If you see this error when starting the system:
+
+```
+ERROR: KazLLM-8B GGUF file not found
+The KazLLM-8B model is enabled in config.yaml but the GGUF file is missing.
+```
+
+You have two options:
+
+**Option 1: Add the GGUF file** (if you have it)
+
+Place the `llama-3.1-kazllm-1.0-8b-q4_k_m.gguf` file in the project directory and run:
+
+```bash
+docker volume create translatorbk_kazllm_models
+docker run --rm \
+  -v "$(pwd):/source" \
+  -v translatorbk_kazllm_models:/models \
+  alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
+```
+
+**Option 2: Disable the model** (if you don't have it)
+
+Edit `config.yaml` and change:
+
+```yaml
+- name: kazllm-8b
+  enabled: false  # Change from true to false
+```
+
+For download instructions with Hugging Face authentication, see [DOWNLOAD_KAZLLM.md](DOWNLOAD_KAZLLM.md).
 
 ### Ollama Models Not Downloading
 
