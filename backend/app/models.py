@@ -1,6 +1,8 @@
 """Pydantic models for API requests and responses."""
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Literal
 from pydantic import BaseModel, Field
+from datetime import datetime
+from enum import Enum
 
 
 class TranslationRequest(BaseModel):
@@ -85,3 +87,66 @@ class HealthResponse(BaseModel):
     status: str
     models_available: List[str]
     ollama_connected: bool
+
+
+# Document Translation Models
+
+class DocumentJobStatus(str, Enum):
+    """Status of a document translation job."""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class TranslatablePhrase(BaseModel):
+    """A phrase that has been translated."""
+    original: str
+    russian: Optional[str] = None
+    kazakh: Optional[str] = None
+
+
+class DocumentJob(BaseModel):
+    """Document translation job."""
+    job_id: str
+    status: DocumentJobStatus
+    document_name: str
+    document_format: str
+    source_language: str
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+    progress: float = 0.0  # 0.0 to 100.0
+    total_phrases: int = 0
+    translated_phrases: int = 0
+    phrases: List[TranslatablePhrase] = []
+
+
+class DocumentUploadResponse(BaseModel):
+    """Response after uploading a document."""
+    job_id: str
+    message: str
+    document_name: str
+    source_language: str
+
+
+class DocumentJobStatusResponse(BaseModel):
+    """Response for job status check."""
+    job_id: str
+    status: DocumentJobStatus
+    document_name: str
+    source_language: str
+    progress: float
+    total_phrases: int
+    translated_phrases: int
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+
+
+class DocumentExportData(BaseModel):
+    """JSON export of all translations."""
+    document: str
+    format: str
+    source_language: str
+    phrases: List[TranslatablePhrase]

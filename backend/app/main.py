@@ -2,19 +2,26 @@
 import time
 import asyncio
 from typing import List
-from fastapi import FastAPI, HTTPException
+from pathlib import Path
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 import httpx
+import aiofiles
 
 from app.config import config_manager
 from app.models import (
     TranslationRequest,
     TranslationResponse,
     TranslationResult,
-    HealthResponse
+    HealthResponse,
+    DocumentUploadResponse,
+    DocumentJobStatusResponse,
+    DocumentJobStatus
 )
 from app.services.translator import translator_service
 from app.services.evaluator import get_evaluator
+from app.services.document_translator import document_translation_service
 
 
 # Initialize FastAPI app
@@ -267,6 +274,221 @@ async def get_models():
         ],
         "evaluation_method": config_manager.settings.evaluation_method
     }
+
+
+# Document Translation Endpoints
+
+async def translate_text_helper(text: str, source_language: str) -> TranslationResponse:
+    """Helper function to translate text using the existing pipeline."""
+    request = TranslationRequest(text=text, source_language=source_language)
+
+    # Validate source language
+    if source_language not in ['en', 'zh-TW']:
+        raise ValueError("Source language must be 'en' or 'zh-TW'")
+
+    # Get models
+    russian_models = config_manager.get_models_for_translation(source_language, 'ru')
+    kazakh_models = config_manager.get_models_for_translation(source_language, 'kk')
+
+    if not russian_models and not kazakh_models:
+        raise ValueError(f"No translation models available for {source_language}")
+
+    # Get configs
+    russian_config = config_manager.get_translation_config('ru')
+    kazakh_config = config_manager.get_translation_config('kk')
+
+    # Create evaluator
+    evaluator = get_evaluator(
+        method=config_manager.settings.evaluation_method,
+        threshold=config_manager.settings.consensus_threshold
+    )
+
+    # Translate
+    tasks = []
+    if russian_models:
+        tasks.append(translator_service.translate_with_all_models(
+            russian_models, text, source_language, 'ru', russian_config
+        ))
+    else:
+        tasks.append(asyncio.sleep(0))
+
+    if kazakh_models:
+        tasks.append(translator_service.translate_with_all_models(
+            kazakh_models, text, source_language, 'kk', kazakh_config
+        ))
+    else:
+        tasks.append(asyncio.sleep(0))
+
+    results = await asyncio.gather(*tasks)
+    russian_translations = results[0] if russian_models else []
+    kazakh_translations = results[1] if kazakh_models else []
+
+    # Build model weights
+    all_models = russian_models + kazakh_models
+    model_weights = {m.name: m.weight for m in all_models}
+
+    # Evaluate
+    if russian_translations:
+        best_russian, russian_confidence = evaluator.evaluate(russian_translations, model_weights)
+        russian_result = TranslationResult(
+            target_language="ru",
+            best_translation=best_russian.translation,
+            all_translations=russian_translations,
+            evaluation_method=config_manager.settings.evaluation_method,
+            evaluation_score=russian_confidence
+        )
+    else:
+        russian_result = TranslationResult(
+            target_language="ru",
+            best_translation="",
+            all_translations=[],
+            evaluation_method=config_manager.settings.evaluation_method,
+            evaluation_score=0.0
+        )
+
+    if kazakh_translations:
+        best_kazakh, kazakh_confidence = evaluator.evaluate(kazakh_translations, model_weights)
+        kazakh_result = TranslationResult(
+            target_language="kk",
+            best_translation=best_kazakh.translation,
+            all_translations=kazakh_translations,
+            evaluation_method=config_manager.settings.evaluation_method,
+            evaluation_score=kazakh_confidence
+        )
+    else:
+        kazakh_result = TranslationResult(
+            target_language="kk",
+            best_translation="",
+            all_translations=[],
+            evaluation_method=config_manager.settings.evaluation_method,
+            evaluation_score=0.0
+        )
+
+    return TranslationResponse(
+        russian=russian_result,
+        kazakh=kazakh_result,
+        source_language=source_language,
+        source_text=text,
+        total_processing_time=0.0
+    )
+
+
+@app.post("/api/documents/upload", response_model=DocumentUploadResponse, tags=["Documents"])
+async def upload_document(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    source_language: str = Form(...)
+):
+    """
+    Upload a document for translation.
+
+    Supported formats: PDF, TXT, MD, DOCX
+    Returns a job ID for tracking the translation progress.
+    """
+    # Validate file format
+    allowed_extensions = {'.pdf', '.txt', '.md', '.docx'}
+    file_extension = Path(file.filename).suffix.lower()
+
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file format. Allowed: {', '.join(allowed_extensions)}"
+        )
+
+    # Validate source language
+    if source_language not in ['en', 'zh-TW']:
+        raise HTTPException(
+            status_code=400,
+            detail="Source language must be 'en' or 'zh-TW'"
+        )
+
+    # Create job
+    job_id = document_translation_service.create_job(
+        document_name=file.filename,
+        document_format=file_extension[1:],  # Remove the dot
+        source_language=source_language
+    )
+
+    # Save uploaded file
+    file_path = document_translation_service.temp_dir / f"{job_id}_upload{file_extension}"
+    async with aiofiles.open(file_path, 'wb') as f:
+        content = await file.read()
+        await f.write(content)
+
+    # Start processing in background
+    background_tasks.add_task(
+        document_translation_service.process_document,
+        job_id,
+        file_path,
+        translate_text_helper
+    )
+
+    return DocumentUploadResponse(
+        job_id=job_id,
+        message="Document uploaded successfully. Translation started.",
+        document_name=file.filename,
+        source_language=source_language
+    )
+
+
+@app.get("/api/documents/jobs/{job_id}/status", response_model=DocumentJobStatusResponse, tags=["Documents"])
+async def get_job_status(job_id: str):
+    """Get the status of a document translation job."""
+    job = document_translation_service.get_job(job_id)
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    return DocumentJobStatusResponse(
+        job_id=job.job_id,
+        status=job.status,
+        document_name=job.document_name,
+        source_language=job.source_language,
+        progress=job.progress,
+        total_phrases=job.total_phrases,
+        translated_phrases=job.translated_phrases,
+        created_at=job.created_at,
+        completed_at=job.completed_at,
+        error_message=job.error_message
+    )
+
+
+@app.get("/api/documents/jobs/{job_id}/download/{language}", tags=["Documents"])
+async def download_document(job_id: str, language: str):
+    """
+    Download a translated document.
+
+    language can be: 'russian', 'kazakh', 'json', 'original'
+    """
+    job = document_translation_service.get_job(job_id)
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.status != DocumentJobStatus.COMPLETED:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job is not completed yet. Current status: {job.status}"
+        )
+
+    file_path = document_translation_service.get_document_path(job_id, language)
+
+    if not file_path:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # Determine filename
+    if language == "json":
+        filename = f"{Path(job.document_name).stem}_translations.json"
+        media_type = "application/json"
+    else:
+        filename = f"{Path(job.document_name).stem}_{language}.md"
+        media_type = "text/markdown"
+
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type=media_type
+    )
 
 
 if __name__ == "__main__":
