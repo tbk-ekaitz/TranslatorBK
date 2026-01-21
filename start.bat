@@ -132,6 +132,18 @@ if exist "config.yaml" (
         findstr /C:"enabled: true" config.yaml >nul 2>&1
         if not errorlevel 1 (
             set USE_ISSAI_PROFILE=true
+            REM Si la imagen no existe, intentar construirla
+            docker image inspect issai/qolda:latest >nul 2>&1
+            if errorlevel 1 (
+                echo Qolda is enabled but image is missing. Building automatically...
+                if exist "scripts\install-qolda.bat" (
+                    call scripts\install-qolda.bat
+                ) else (
+                    echo Error: scripts\install-qolda.bat not found.
+                    pause
+                    exit /b 1
+                )
+            )
         )
     )
 )

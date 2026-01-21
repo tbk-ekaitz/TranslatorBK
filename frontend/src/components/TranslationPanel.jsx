@@ -151,11 +151,19 @@ export default function TranslationPanel() {
               id="english-input"
               value={englishText}
               onChange={(e) => handleTextChange('en', e.target.value)}
-              onFocus={() => handleInputFocus('en')}
-              onClick={() => handleInputFocus('en')}
+              
+              /* CAMBIO 1: Solo permitir focus/click si YA está activo. 
+                Si no está activo, queremos forzar el doble clic. */
+              onFocus={() => activeInput === 'en' && handleInputFocus('en')}
+              onClick={() => activeInput === 'en' && handleInputFocus('en')}
+              
               onDoubleClick={() => handleDoubleClick('en')}
+              
               className={activeInput === 'zh-TW' ? 'disabled' : ''}
-              disabled={activeInput === 'zh-TW'}
+              
+              /* CAMBIO 2: Usar readOnly en lugar de disabled */
+              readOnly={activeInput === 'zh-TW'} 
+              
               placeholder="Enter English text here... (Double-click to unlock if disabled)"
             />
           </div>
@@ -170,11 +178,18 @@ export default function TranslationPanel() {
               id="chinese-input"
               value={chineseText}
               onChange={(e) => handleTextChange('zh-TW', e.target.value)}
-              onFocus={() => handleInputFocus('zh-TW')}
-              onClick={() => handleInputFocus('zh-TW')}
+              
+              /* CAMBIO 1: Condicionar eventos de un solo clic */
+              onFocus={() => activeInput === 'zh-TW' && handleInputFocus('zh-TW')}
+              onClick={() => activeInput === 'zh-TW' && handleInputFocus('zh-TW')}
+              
               onDoubleClick={() => handleDoubleClick('zh-TW')}
+              
               className={activeInput === 'en' ? 'disabled' : ''}
-              disabled={activeInput === 'en'}
+              
+              /* CAMBIO 2: Usar readOnly en lugar de disabled */
+              readOnly={activeInput === 'en'}
+              
               placeholder="在此輸入繁體中文... (雙擊解鎖若被禁用)"
             />
           </div>

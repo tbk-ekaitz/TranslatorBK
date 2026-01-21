@@ -126,6 +126,13 @@ if [ -f "config.yaml" ]; then
     fi
     if grep -A 3 "name: qolda" config.yaml | grep -q "enabled: true"; then
         USE_ISSAI_PROFILE=true
+        # Si Qolda está activado pero no tenemos la imagen, la construimos ahora mismo.
+        if ! docker image inspect issai/qolda:latest >/dev/null 2>&1; then
+            echo "Qolda is enabled but image is missing. Building automatically..."
+            # Aseguramos permisos por si acaso y ejecutamos
+            chmod +x ./scripts/install-qolda.sh
+            ./scripts/install-qolda.sh
+        fi
     fi
 fi
 

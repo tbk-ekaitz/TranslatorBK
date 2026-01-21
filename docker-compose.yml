@@ -68,7 +68,7 @@ services:
   # OPTIONAL: Only starts if kazllm-8b is enabled in config.yaml
   # Enable with: docker compose --profile issai up -d
   llamacpp:
-    image: ghcr.io/ggerganov/llama.cpp:server
+    image: ghcr.io/ggml-org/llama.cpp:server
     container_name: translator-llamacpp
     profiles: ["issai"]  # Optional service - start with --profile issai
     volumes:
