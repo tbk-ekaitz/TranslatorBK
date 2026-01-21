@@ -212,6 +212,85 @@ Provide ONLY the translation, without any explanations, notes, or additional tex
             print(f"Error translating with Google model {model.name}: {e}")
             return None
 
+    async def _translate_with_llamacpp(
+        self,
+        model: ModelConfig,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        config: TranslationConfig
+    ) -> Optional[ModelTranslation]:
+        """Translate using llama.cpp server (for KazLLM-8B GGUF)."""
+        try:
+            start_time = time.time()
+            prompt = self._get_translation_prompt(text, source_lang, target_lang, config)
+
+            # llama.cpp server API (OpenAI-compatible)
+            async with httpx.AsyncClient(timeout=model.timeout) as client:
+                response = await client.post(
+                    f"{model.base_url}/completion",
+                    json={
+                        "prompt": prompt,
+                        "temperature": config.temperature,
+                        "n_predict": config.max_tokens,
+                        "stop": ["\n\n", "Source language:", "Target language:"],
+                    }
+                )
+                response.raise_for_status()
+                result = response.json()
+                translation = result.get('content', '').strip()
+
+            processing_time = time.time() - start_time
+
+            return ModelTranslation(
+                model_name=model.name,
+                translation=translation,
+                processing_time=processing_time
+            )
+
+        except Exception as e:
+            print(f"Error translating with llama.cpp model {model.name}: {e}")
+            return None
+
+    async def _translate_with_qolda(
+        self,
+        model: ModelConfig,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        config: TranslationConfig
+    ) -> Optional[ModelTranslation]:
+        """Translate using ISSAI Qolda model."""
+        try:
+            start_time = time.time()
+            prompt = self._get_translation_prompt(text, source_lang, target_lang, config)
+
+            # Qolda API endpoint
+            async with httpx.AsyncClient(timeout=model.timeout) as client:
+                response = await client.post(
+                    f"{model.base_url}/generate",
+                    json={
+                        "prompt": prompt,
+                        "max_tokens": config.max_tokens,
+                        "temperature": config.temperature,
+                    }
+                )
+                response.raise_for_status()
+                result = response.json()
+                translation = result.get('response', '').strip()
+
+            processing_time = time.time() - start_time
+
+            return ModelTranslation(
+                model_name=model.name,
+                translation=translation,
+                processing_time=processing_time
+            )
+
+        except Exception as e:
+            print(f"Error translating with Qolda model {model.name}: {e}")
+            return None
+
     async def translate_with_model(
         self,
         model: ModelConfig,
@@ -229,6 +308,10 @@ Provide ONLY the translation, without any explanations, notes, or additional tex
             return await self._translate_with_anthropic(model, text, source_lang, target_lang, config)
         elif model.type == 'google':
             return await self._translate_with_google(model, text, source_lang, target_lang, config)
+        elif model.type == 'llamacpp':
+            return await self._translate_with_llamacpp(model, text, source_lang, target_lang, config)
+        elif model.type == 'qolda':
+            return await self._translate_with_qolda(model, text, source_lang, target_lang, config)
         else:
             print(f"Unknown model type: {model.type}")
             return None

@@ -41,7 +41,18 @@ if not exist .env (
     )
 )
 
-echo Starting services...
+echo Step 1: Downloading KazLLM-8B model (if needed)...
+echo.
+
+REM Download KazLLM model
+if exist ".\scripts\download-kazllm.bat" (
+    call .\scripts\download-kazllm.bat
+) else (
+    echo Warning: KazLLM download script not found. Skipping...
+)
+
+echo.
+echo Step 2: Starting Docker services...
 echo.
 
 REM Start Docker Compose

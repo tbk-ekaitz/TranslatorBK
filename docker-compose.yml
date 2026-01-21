@@ -64,10 +64,56 @@ services:
       retries: 3
       start_period: 5s
 
+  # Llama.cpp server for KazLLM-8B GGUF model
+  llamacpp:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    container_name: translator-llamacpp
+    volumes:
+      - kazllm_models:/models
+    ports:
+      - "8080:8080"
+    networks:
+      - translator-network
+    command: >
+      --server
+      --host 0.0.0.0
+      --port 8080
+      -m /models/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf
+      -c 4096
+      -n 512
+      --threads 4
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ISSAI Qolda multimodal model
+  qolda:
+    image: issai/qolda:latest
+    container_name: translator-qolda
+    ports:
+      - "8081:8000"
+    networks:
+      - translator-network
+    restart: unless-stopped
+    environment:
+      - MODEL_PATH=/app/models
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
 networks:
   translator-network:
     driver: bridge
 
 volumes:
   ollama_data:
+    driver: local
+  kazllm_models:
     driver: local

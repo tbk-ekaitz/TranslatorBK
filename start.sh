@@ -42,7 +42,21 @@ if [ ! -f .env ]; then
     fi
 fi
 
-echo -e "${GREEN}Starting services...${NC}"
+echo -e "${GREEN}Step 1: Downloading KazLLM-8B model (if needed)...${NC}"
+echo ""
+
+# Download KazLLM model
+if [ -f "./scripts/download-kazllm.sh" ]; then
+    ./scripts/download-kazllm.sh
+    if [ $? -ne 0 ]; then
+        echo -e "${YELLOW}Warning: KazLLM download had issues, but continuing...${NC}"
+    fi
+else
+    echo -e "${YELLOW}Warning: KazLLM download script not found. Skipping...${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}Step 2: Starting Docker services...${NC}"
 echo ""
 
 # Start Docker Compose
