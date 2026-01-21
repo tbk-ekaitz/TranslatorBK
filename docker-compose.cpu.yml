@@ -16,13 +16,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   # Backend API service
   backend:
@@ -75,7 +68,7 @@ services:
   # OPTIONAL: Only starts if kazllm-8b is enabled in config.yaml
   # Enable with: docker compose --profile issai up -d
   llamacpp:
-    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    image: ghcr.io/ggml-org/llama.cpp:server
     container_name: translator-llamacpp
     profiles: ["issai"]  # Optional service - start with --profile issai
     volumes:
@@ -84,13 +77,6 @@ services:
       - "8080:8080"
     networks:
       - translator-network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     command: >
       --server
       --host 0.0.0.0
@@ -98,7 +84,6 @@ services:
       -m /models/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf
       -c 4096
       -n 512
-      -ngl 99
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
@@ -127,13 +112,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
 networks:
   translator-network:
