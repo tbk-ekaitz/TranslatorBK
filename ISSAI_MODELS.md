@@ -72,21 +72,66 @@ Access the web interface at http://localhost:3000 and try translating:
 
 ## 📦 Manual Model Download (if needed)
 
-If the automatic download fails, you can download KazLLM-8B manually:
+If the automatic download fails with 401 Unauthorized, the model requires authentication.
+
+### Option 1: Download with Hugging Face Token (Recommended)
+
+**Step 1: Get a Hugging Face token**
+1. Go to https://huggingface.co/settings/tokens
+2. Click "New token"
+3. Give it a name (e.g., "kazllm-download")
+4. Select "Read" permission
+5. Create and copy the token
+
+**Step 2: Download with authentication**
 
 **Linux/Mac:**
 ```bash
 cd scripts
-./download-kazllm.sh
+./download-kazllm.sh hf_YOUR_TOKEN_HERE
 ```
 
 **Windows:**
 ```bash
 cd scripts
-download-kazllm.bat
+download-kazllm.bat hf_YOUR_TOKEN_HERE
 ```
 
 This downloads the model into a Docker volume, making it portable.
+
+### Option 2: Manual Download via Hugging Face CLI
+
+If you prefer to use the official Hugging Face CLI:
+
+```bash
+# Install CLI
+pip install huggingface-hub
+
+# Login with your token
+huggingface-cli login
+
+# Download the model
+huggingface-cli download issai/LLama-3.1-KazLLM-1.0-8B-GGUF4 llama-3.1-kazllm-1.0-8b-q4_k_m.gguf --local-dir ./kazllm-model
+
+# Copy to Docker volume
+docker volume create translatorbk_kazllm_models
+docker run --rm -v "$(pwd)/kazllm-model:/source" -v translatorbk_kazllm_models:/models alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
+```
+
+### Option 3: Share the Model File
+
+If someone already downloaded the model, they can share it:
+
+**To export:**
+```bash
+docker run --rm -v translatorbk_kazllm_models:/models -v "$(pwd):/backup" alpine cp /models/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /backup/
+```
+
+**To import (on another machine):**
+```bash
+docker volume create translatorbk_kazllm_models
+docker run --rm -v "$(pwd):/source" -v translatorbk_kazllm_models:/models alpine cp /source/llama-3.1-kazllm-1.0-8b-q4_k_m.gguf /models/
+```
 
 ---
 

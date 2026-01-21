@@ -55,7 +55,10 @@ if docker run --rm -v translatorbk_kazllm_models:/models alpine test -f /models/
     echo -e "${GREEN}✓ Downloaded${NC}"
 else
     echo -e "${RED}✗ Not found${NC}"
-    echo -e "${YELLOW}  Run: ./scripts/download-kazllm.sh${NC}"
+    echo -e "${YELLOW}  To download:${NC}"
+    echo -e "${YELLOW}    1. Get HF token: https://huggingface.co/settings/tokens${NC}"
+    echo -e "${YELLOW}    2. Run: ./scripts/download-kazllm.sh YOUR_TOKEN${NC}"
+    echo -e "${YELLOW}  Or without token (may fail): ./scripts/download-kazllm.sh${NC}"
     all_healthy=false
 fi
 
