@@ -8,6 +8,9 @@ A sophisticated web-based translation application that leverages multiple AI mod
 - **Intelligent Selection**: Automatically evaluates and selects the best translation from multiple candidates
 - **Dual Source Languages**: Supports English and Traditional Chinese as source languages (mutually exclusive inputs)
 - **Dual Target Languages**: Translates to Russian and Kazakh simultaneously
+- **Document Translation**: Upload and translate entire documents (PDF, DOCX, TXT, MD) with automatic text extraction and reconstruction
+- **Real-time Progress**: Track document translation progress with live updates and progress bars
+- **Multiple Export Formats**: Download translated documents as Markdown or JSON with all phrase translations
 - **Modern Web UI**: Clean, responsive React-based interface with real-time feedback
 - **Containerized**: Fully containerized with Docker for easy deployment
 - **Configurable**: Easy configuration via YAML for models and translation settings
@@ -121,6 +124,109 @@ Once started, access the application at:
   - Clears any text in the inactive input
   - Makes it uneditable
 - You can switch between languages by clicking on the other input field
+
+## Document Translation
+
+The system supports translating entire documents while preserving their structure.
+
+### Accessing Document Translation
+
+Navigate to the **Document Translation** page:
+- Click "Document Translation" in the navigation menu, or
+- Visit http://localhost:3000/document directly
+
+### Supported Formats
+
+- **PDF** (.pdf) - Portable Document Format
+- **DOCX** (.docx) - Microsoft Word documents
+- **TXT** (.txt) - Plain text files
+- **MD** (.md) - Markdown files
+
+### How to Use
+
+1. **Upload a Document**
+   - Click "Choose File" and select your document (PDF, DOCX, TXT, or MD)
+   - Select the source language (English or Traditional Chinese)
+   - Click "Translate Document"
+   - You'll receive a unique **Job ID** for tracking
+
+2. **Track Translation Progress**
+   - After upload, the Job ID is **automatically filled** in the status section
+   - Progress updates **every 500ms** in real-time
+   - You'll see:
+     - Current status (Pending/Processing/Completed/Failed)
+     - Progress bar showing percentage complete
+     - Number of phrases translated vs. total phrases
+
+3. **Download Translated Documents**
+   - Once completed, four download options appear:
+     - **Russian Translation** - Document translated to Russian (Markdown)
+     - **Kazakh Translation** - Document translated to Kazakh (Markdown)
+     - **Original (MD)** - Original document converted to Markdown
+     - **JSON Export** - All translatable phrases with all translations
+
+### Translation Pipeline
+
+The document translation process:
+
+```
+1. Document Upload (PDF/DOCX/TXT/MD)
+        ↓
+2. Convert to Markdown (using markitdown)
+        ↓
+3. Extract translatable text fragments
+        ↓
+4. Translate each fragment in parallel/batches
+   (uses the same multi-model translation API)
+        ↓
+5. Reconstruct documents with translations
+        ↓
+6. Generate outputs:
+   - document_russian.md
+   - document_kazakh.md
+   - document_original.md
+   - translations.json
+```
+
+### JSON Export Format
+
+The JSON export contains all translatable phrases:
+
+```json
+{
+  "document": "example.pdf",
+  "format": "pdf",
+  "source_language": "en",
+  "phrases": [
+    {
+      "original": "Hello world",
+      "russian": "Привет, мир",
+      "kazakh": "Сәлем Әлем"
+    },
+    {
+      "original": "Welcome to our application",
+      "russian": "Добро пожаловать в наше приложение",
+      "kazakh": "Біздің қолданбаға қош келдіңіз"
+    }
+  ]
+}
+```
+
+### Features
+
+- **Automatic Text Extraction**: Intelligently extracts translatable text while preserving document structure
+- **Parallel Translation**: Fragments are translated in batches for optimal performance
+- **Structure Preservation**: Maintains headings, lists, paragraphs, and formatting
+- **Real-time Updates**: Status updates every 500ms for live progress tracking
+- **Multiple Outputs**: Get translations in multiple formats (MD, JSON)
+- **Job Tracking**: Save your Job ID to check status later
+
+### Tips
+
+- **Large Documents**: May take several minutes depending on document length
+- **Keep Job ID**: Save your Job ID to check status later or share with others
+- **Markdown Output**: All documents are converted to Markdown for consistency
+- **Original Preservation**: Download the original (converted to MD) for comparison
 
 ## Configuration
 
@@ -281,33 +387,38 @@ TranslatorBK/
 │   ├── app/
 │   │   ├── main.py         # Main FastAPI application
 │   │   ├── config.py       # Configuration management
-│   │   ├── models.py       # Pydantic models
+│   │   ├── models.py       # Pydantic models (incl. document models)
 │   │   └── services/
-│   │       ├── translator.py  # Translation service
-│   │       └── evaluator.py   # Evaluation service
+│   │       ├── translator.py          # Translation service
+│   │       ├── evaluator.py           # Evaluation service
+│   │       └── document_translator.py # Document translation service
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/               # React frontend
 │   ├── src/
-│   │   ├── App.jsx
+│   │   ├── App.jsx        # Main app with routing
 │   │   ├── main.jsx
 │   │   ├── index.css
 │   │   └── components/
-│   │       └── TranslationPanel.jsx
+│   │       ├── TranslationPanel.jsx  # Text translation UI
+│   │       └── DocumentPage.jsx      # Document translation UI
 │   ├── package.json
 │   ├── nginx.conf
 │   └── Dockerfile
 ├── config.yaml            # Model and translation configuration
 ├── .env.example          # Example environment variables
-├── docker compose.yml    # Docker Compose configuration
-├── start.sh             # Linux/Mac startup script
-├── start.bat            # Windows startup script
+├── docker-compose.yml    # Docker Compose configuration (GPU)
+├── docker-compose.cpu.yml # Docker Compose configuration (CPU-only)
+├── start.sh             # Linux/Mac startup script (auto-detects CUDA)
+├── start.bat            # Windows startup script (auto-detects CUDA)
 └── README.md            # This file
 ```
 
 ## API Endpoints
 
-### POST `/translate`
+### Text Translation
+
+#### POST `/translate`
 
 Translate text from source language to Russian and Kazakh.
 
@@ -342,11 +453,72 @@ Translate text from source language to Russian and Kazakh.
 }
 ```
 
-### GET `/health`
+### Document Translation
+
+#### POST `/api/documents/upload`
+
+Upload a document for translation.
+
+**Request:** (multipart/form-data)
+- `file`: Document file (PDF, DOCX, TXT, MD)
+- `source_language`: Source language code ("en" or "zh-TW")
+
+**Response:**
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "message": "Document uploaded successfully. Translation started.",
+  "document_name": "example.pdf",
+  "source_language": "en"
+}
+```
+
+#### GET `/api/documents/jobs/{job_id}/status`
+
+Get the status of a document translation job.
+
+**Response:**
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "processing",
+  "document_name": "example.pdf",
+  "source_language": "en",
+  "progress": 45.5,
+  "total_phrases": 150,
+  "translated_phrases": 68,
+  "created_at": "2026-01-21T10:30:00Z",
+  "completed_at": null,
+  "error_message": null
+}
+```
+
+**Status values:**
+- `pending`: Job created, waiting to start
+- `processing`: Translation in progress
+- `completed`: Translation finished successfully
+- `failed`: Translation failed (see error_message)
+
+#### GET `/api/documents/jobs/{job_id}/download/{language}`
+
+Download a translated document.
+
+**Parameters:**
+- `language`: One of:
+  - `russian`: Russian translation (Markdown)
+  - `kazakh`: Kazakh translation (Markdown)
+  - `original`: Original document (converted to Markdown)
+  - `json`: JSON export with all phrases and translations
+
+**Response:** File download
+
+### System
+
+#### GET `/health`
 
 Check API health and available models.
 
-### GET `/models`
+#### GET `/models`
 
 Get list of configured models and their status.
 
