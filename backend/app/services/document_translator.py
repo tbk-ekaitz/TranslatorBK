@@ -155,9 +155,10 @@ class DocumentTranslationService:
 
             # Try to find and replace the text, preserving surrounding markdown
             # This handles text that might appear in headings, lists, etc.
+            # Use lambda to avoid backreference issues in translated text
             result = re.sub(
                 r'([#*\-\d\.>\s]*?)' + escaped_original + r'(?=[\s\n\*\#\]]|$)',
-                r'\1' + translated,
+                lambda m: m.group(1) + translated,
                 result,
                 count=1
             )
