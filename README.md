@@ -418,7 +418,7 @@ TranslatorBK/
 
 ### Text Translation
 
-#### POST `/translate`
+#### POST `/api/translate`
 
 Translate text from source language to Russian and Kazakh.
 
@@ -514,11 +514,11 @@ Download a translated document.
 
 ### System
 
-#### GET `/health`
+#### GET `/api/health`
 
 Check API health and available models.
 
-#### GET `/models`
+#### GET `/api/models`
 
 Get list of configured models and their status.
 
