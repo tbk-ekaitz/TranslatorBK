@@ -68,19 +68,19 @@ if "%KAZLLM_ENABLED%"=="true" (
     set KAZLLM_IN_VOLUME=%errorlevel%
 
     if "%KAZLLM_IN_VOLUME%"=="0" (
-        echo [32m✓ KazLLM-8B GGUF file found in Docker volume[0m
+        echo ✓ KazLLM-8B GGUF file found in Docker volume
     ) else (
         REM Check if GGUF file exists in current directory
         if exist "%GGUF_FILENAME%" (
-            echo [33mFound %GGUF_FILENAME% in current directory[0m
-            echo [33mCopying to Docker volume...[0m
+            echo Found %GGUF_FILENAME% in current directory
+            echo Copying to Docker volume...
 
             docker run --rm -v "%cd%:/source" -v translatorbk_kazllm_models:/models alpine cp /source/%GGUF_FILENAME% /models/
 
             if not errorlevel 1 (
-                echo [32m✓ GGUF file successfully copied to Docker volume[0m
+                echo ✓ GGUF file successfully copied to Docker volume
             ) else (
-                echo [31m✗ Failed to copy GGUF file to Docker volume[0m
+                echo ✗ Failed to copy GGUF file to Docker volume
                 pause
                 exit /b 1
             )
@@ -110,7 +110,7 @@ if "%KAZLLM_ENABLED%"=="true" (
         )
     )
 ) else (
-    echo [33m⊘ KazLLM-8B model is disabled in config.yaml (skipping)[0m
+    echo ⊘ KazLLM-8B model is disabled in config.yaml (skipping)
 )
 
 echo.
@@ -125,20 +125,20 @@ REM Try to detect NVIDIA GPU using nvidia-smi
 nvidia-smi >nul 2>&1
 if not errorlevel 1 (
     set CUDA_AVAILABLE=true
-    echo [32m✓ NVIDIA GPU detected (CUDA available)[0m
-    echo [33m  Using docker-compose.yml (GPU-accelerated)[0m
+    echo ✓ NVIDIA GPU detected (CUDA available)
+    echo   Using docker-compose.yml (GPU-accelerated)
     set COMPOSE_FILE=docker-compose.yml
 ) else (
     REM Try Docker GPU test
     docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi >nul 2>&1
     if not errorlevel 1 (
         set CUDA_AVAILABLE=true
-        echo [32m✓ NVIDIA GPU detected via Docker (CUDA available)[0m
-        echo [33m  Using docker-compose.yml (GPU-accelerated)[0m
+        echo ✓ NVIDIA GPU detected via Docker (CUDA available)
+        echo   Using docker-compose.yml (GPU-accelerated)
         set COMPOSE_FILE=docker-compose.yml
     ) else (
-        echo [33m⊘ No NVIDIA GPU detected (CUDA not available)[0m
-        echo [33m  Using docker-compose.cpu.yml (CPU-only mode)[0m
+        echo ⊘ No NVIDIA GPU detected (CUDA not available)
+        echo   Using docker-compose.cpu.yml (CPU-only mode)
         set COMPOSE_FILE=docker-compose.cpu.yml
     )
 )
@@ -180,10 +180,10 @@ if exist "config.yaml" (
 
 REM Start Docker Compose with or without ISSAI profile
 if "%USE_ISSAI_PROFILE%"=="true" (
-    echo [33mStarting with ISSAI models (llamacpp/qolda)...[0m
+    echo Starting with ISSAI models (llamacpp/qolda)...
     docker compose -f "%COMPOSE_FILE%" --profile issai up -d
 ) else (
-    echo [33mStarting core services only (Ollama models)...[0m
+    echo Starting core services only (Ollama models)...
     docker compose -f "%COMPOSE_FILE%" up -d
 )
 
