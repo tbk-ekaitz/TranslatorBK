@@ -18,9 +18,14 @@ const DocumentPage = () => {
     if (file) {
       const extension = file.name.split('.').pop().toLowerCase();
       const allowedExtensions = ['pdf', 'txt', 'md', 'docx'];
+      const maxSizeMB = 100;
+      const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
       if (!allowedExtensions.includes(extension)) {
         setUploadError(`Invalid file type. Allowed: ${allowedExtensions.join(', ')}`);
+        setSelectedFile(null);
+      } else if (file.size > maxSizeBytes) {
+        setUploadError(`File is too large. Maximum size is ${maxSizeMB}MB (file is ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
         setSelectedFile(null);
       } else {
         setSelectedFile(file);
@@ -50,8 +55,15 @@ const DocumentPage = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Upload failed');
+        if (response.status === 413) {
+          throw new Error('File is too large. Maximum size is 100MB');
+        }
+        try {
+          const error = await response.json();
+          throw new Error(error.detail || 'Upload failed');
+        } catch (e) {
+          throw new Error('Upload failed');
+        }
       }
 
       const data = await response.json();
@@ -173,7 +185,7 @@ const DocumentPage = () => {
 
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Select Document (PDF, TXT, MD, DOCX):
+            Select Document (PDF, TXT, MD, DOCX - Max 100MB):
           </label>
           <input
             type="file"
@@ -183,7 +195,7 @@ const DocumentPage = () => {
           />
           {selectedFile && (
             <p style={{ color: '#666', fontSize: '14px' }}>
-              Selected: {selectedFile.name}
+              Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)}MB)
             </p>
           )}
         </div>
