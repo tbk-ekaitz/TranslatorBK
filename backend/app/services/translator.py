@@ -76,11 +76,6 @@ Provide ONLY the translation, without any explanations, notes, or additional tex
                 result = response.json()
                 translation = result.get('response', '').strip()
 
-            # If translation is empty, return None so it gets filtered out
-            if not translation:
-                print(f"Warning: Empty translation from Ollama model {model.name}")
-                return None
-
             processing_time = time.time() - start_time
 
             return ModelTranslation(
@@ -122,12 +117,6 @@ Provide ONLY the translation, without any explanations, notes, or additional tex
             )
 
             translation = response.choices[0].message.content.strip()
-
-            # If translation is empty, return None so it gets filtered out
-            if not translation:
-                print(f"Warning: Empty translation from OpenAI model {model.name}")
-                return None
-
             processing_time = time.time() - start_time
 
             return ModelTranslation(
@@ -169,12 +158,6 @@ Provide ONLY the translation, without any explanations, notes, or additional tex
             )
 
             translation = response.content[0].text.strip()
-
-            # If translation is empty, return None so it gets filtered out
-            if not translation:
-                print(f"Warning: Empty translation from Anthropic model {model.name}")
-                return None
-
             processing_time = time.time() - start_time
 
             return ModelTranslation(
@@ -217,12 +200,6 @@ Provide ONLY the translation, without any explanations, notes, or additional tex
             )
 
             translation = response.text.strip()
-
-            # If translation is empty, return None so it gets filtered out
-            if not translation:
-                print(f"Warning: Empty translation from Google model {model.name}")
-                return None
-
             processing_time = time.time() - start_time
 
             return ModelTranslation(
@@ -263,11 +240,6 @@ Provide ONLY the translation, without any explanations, notes, or additional tex
                 result = response.json()
                 translation = result.get('content', '').strip()
 
-            # If translation is empty, return None so it gets filtered out
-            if not translation:
-                print(f"Warning: Empty translation from llama.cpp model {model.name}")
-                return None
-
             processing_time = time.time() - start_time
 
             return ModelTranslation(
@@ -306,11 +278,6 @@ Provide ONLY the translation, without any explanations, notes, or additional tex
                 response.raise_for_status()
                 result = response.json()
                 translation = result.get('response', '').strip()
-
-            # If translation is empty, return None so it gets filtered out
-            if not translation:
-                print(f"Warning: Empty translation from Qolda model {model.name}")
-                return None
 
             processing_time = time.time() - start_time
 
