@@ -146,8 +146,7 @@ services:
 
 networks:
   translator-network:
-    external: true
-    name: translatorbk_translator-network
+    driver: bridge
 
 volumes:
   ollama_data:

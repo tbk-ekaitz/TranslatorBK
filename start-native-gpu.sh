@@ -122,14 +122,15 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}Step 3: Creating Docker network...${NC}"
+echo -e "${GREEN}Step 3: Creating Docker volumes and network...${NC}"
 echo ""
-
-# Create network if it doesn't exist
-docker network create translatorbk_translator-network 2>/dev/null || echo -e "${YELLOW}Network already exists${NC}"
 
 # Create volumes
 docker volume create translatorbk_ollama_data 2>/dev/null || true
+
+# Create network with the same name docker compose will use
+# Docker compose with project name creates: <project>_<network-name>
+docker network create translatorbk_translator-network 2>/dev/null || echo -e "${YELLOW}Network already exists${NC}"
 
 echo ""
 echo -e "${GREEN}Step 4: Starting GPU services with native GPU support...${NC}"
