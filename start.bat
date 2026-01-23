@@ -264,7 +264,7 @@ echo.
 echo Access the application:
 echo   Frontend: http://localhost:3000
 echo   Backend API: http://localhost:8000
-echo   API Docs: http://localhost:8000/docs
+echo   API Docs: http://localhost:8000/api/docs
 echo.
 echo To view logs:
 echo   docker compose logs -f
