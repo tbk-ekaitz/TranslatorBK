@@ -110,7 +110,7 @@ if "%KAZLLM_ENABLED%"=="true" (
         )
     )
 ) else (
-    echo [SKIP] KazLLM-8B model is disabled in config.yaml (skipping)
+    echo [SKIP] KazLLM-8B model is disabled in config.yaml - skipping
 )
 
 echo.
@@ -125,20 +125,20 @@ REM Try to detect NVIDIA GPU using nvidia-smi
 nvidia-smi >nul 2>&1
 if not errorlevel 1 (
     set CUDA_AVAILABLE=true
-    echo [OK] NVIDIA GPU detected (CUDA available)
-    echo   Using docker-compose.yml (GPU-accelerated)
+    echo [OK] NVIDIA GPU detected - CUDA available
+    echo   Using docker-compose.yml with GPU acceleration
     set COMPOSE_FILE=docker-compose.yml
 ) else (
     REM Try Docker GPU test
     docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi >nul 2>&1
     if not errorlevel 1 (
         set CUDA_AVAILABLE=true
-        echo [OK] NVIDIA GPU detected via Docker (CUDA available)
-        echo   Using docker-compose.yml (GPU-accelerated)
+        echo [OK] NVIDIA GPU detected via Docker - CUDA available
+        echo   Using docker-compose.yml with GPU acceleration
         set COMPOSE_FILE=docker-compose.yml
     ) else (
-        echo [SKIP] No NVIDIA GPU detected (CUDA not available)
-        echo   Using docker-compose.cpu.yml (CPU-only mode)
+        echo [SKIP] No NVIDIA GPU detected - CUDA not available
+        echo   Using docker-compose.cpu.yml - CPU-only mode
         set COMPOSE_FILE=docker-compose.cpu.yml
     )
 )
@@ -180,10 +180,10 @@ if exist "config.yaml" (
 
 REM Start Docker Compose with or without ISSAI profile
 if "%USE_ISSAI_PROFILE%"=="true" (
-    echo Starting with ISSAI models (llamacpp/qolda)...
+    echo Starting with ISSAI models - llamacpp and qolda...
     docker compose -f "%COMPOSE_FILE%" --profile issai up -d
 ) else (
-    echo Starting core services only (Ollama models)...
+    echo Starting core services only - Ollama models...
     docker compose -f "%COMPOSE_FILE%" up -d
 )
 
@@ -228,7 +228,7 @@ call :check_model t-pro-it-2.0 t-tech/t-pro-it-2.0:q4_k_m
 echo.
 echo Model installation complete!
 echo.
-echo Note: T-pro-it-2.0 requires significant resources (20GB+ VRAM).
+echo Note: T-pro-it-2.0 requires significant resources - 20GB+ VRAM.
 echo If it failed, you can still use llama3.1 and qwen2.5 for translations.
 echo.
 
