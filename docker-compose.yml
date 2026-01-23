@@ -3,6 +3,7 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: translator-ollama
+    runtime: nvidia
     volumes:
       - ollama_data:/root/.ollama
     ports:
@@ -20,13 +21,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   # Backend API service
   backend:
@@ -81,6 +75,7 @@ services:
   llamacpp:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
     container_name: translator-llamacpp
+    runtime: nvidia
     profiles: ["issai"]  # Optional service - start with --profile issai
     volumes:
       - kazllm_models:/models
@@ -92,13 +87,6 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - CUDA_VISIBLE_DEVICES=0
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     command: >
       --server
       --host 0.0.0.0
@@ -121,6 +109,7 @@ services:
   qolda:
     image: issai/qolda:latest
     container_name: translator-qolda
+    runtime: nvidia
     profiles: ["issai"]  # Optional service - requires custom Docker image
     ports:
       - "8081:8000"
@@ -138,13 +127,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
 networks:
   translator-network:
