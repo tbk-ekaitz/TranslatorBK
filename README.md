@@ -107,7 +107,7 @@ Once started, access the application at:
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+- **API Documentation**: http://localhost:8000/api/docs
 
 ## Usage
 
@@ -522,7 +522,7 @@ Check API health and available models.
 
 Get list of configured models and their status.
 
-For full API documentation, visit http://localhost:8000/docs when the system is running.
+For full API documentation, visit http://localhost:8000/api/docs when the system is running.
 
 ## Troubleshooting
 

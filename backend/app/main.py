@@ -28,7 +28,10 @@ from app.services.document_translator import document_translation_service
 app = FastAPI(
     title="Multi-Model Translation API",
     description="Translation service using multiple AI models with automatic quality selection",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json"
 )
 
 # Configure CORS
