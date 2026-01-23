@@ -10,6 +10,9 @@ services:
     networks:
       - translator-network
     restart: unless-stopped
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 30s
@@ -84,6 +87,9 @@ services:
       - "8080:8080"
     networks:
       - translator-network
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     deploy:
       resources:
         reservations:
@@ -121,6 +127,8 @@ services:
     restart: unless-stopped
     environment:
       - MODEL_PATH=/app/models
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1"]
       interval: 30s
