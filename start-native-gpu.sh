@@ -209,8 +209,9 @@ echo ""
 echo -e "${GREEN}Step 5: Starting backend and frontend with docker compose...${NC}"
 echo ""
 
-# Start only backend and frontend using docker compose
-docker compose up -d backend frontend
+# Start backend and frontend without dependencies check
+# (ollama is already running from docker run above)
+docker compose up -d --no-deps backend frontend
 
 echo ""
 echo -e "${GREEN}Step 6: Waiting for services to be ready...${NC}"
