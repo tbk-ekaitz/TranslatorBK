@@ -115,7 +115,33 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}Step 2: Starting Docker services...${NC}"
+echo -e "${GREEN}Step 2: Detecting CUDA availability...${NC}"
+echo ""
+
+# Detect if CUDA/GPU is available
+CUDA_AVAILABLE=false
+
+# Try to detect NVIDIA GPU
+if command -v nvidia-smi &> /dev/null; then
+    if nvidia-smi &> /dev/null; then
+        CUDA_AVAILABLE=true
+        echo -e "${GREEN}✓ NVIDIA GPU detected (CUDA available via nvidia-smi)${NC}"
+    fi
+fi
+
+# If nvidia-smi not found, try Docker GPU test
+if [ "$CUDA_AVAILABLE" = false ]; then
+    if docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi &> /dev/null 2>&1; then
+        CUDA_AVAILABLE=true
+        echo -e "${GREEN}✓ NVIDIA GPU detected (CUDA available via Docker)${NC}"
+    else
+        echo -e "${YELLOW}⚠ No NVIDIA GPU detected - services will start but GPU acceleration may not work${NC}"
+        echo -e "${YELLOW}  Check: 1) NVIDIA drivers installed, 2) nvidia-container-toolkit installed${NC}"
+    fi
+fi
+
+echo ""
+echo -e "${GREEN}Step 3: Starting Docker services...${NC}"
 echo ""
 
 # Check if any ISSAI models are enabled (kazllm-8b or qolda)
