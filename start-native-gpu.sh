@@ -144,9 +144,7 @@ echo -e "${YELLOW}Starting Ollama with GPU...${NC}"
 docker run -d \
     --name translator-ollama \
     --gpus all \
-    -e NVIDIA_VISIBLE_DEVICES=all \
-    -e NVIDIA_DRIVER_CAPABILITIES=compute,utility \
-    -e LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib/wsl/lib \
+    --env-file "$(pwd)/.env.gpu" \
     -v translatorbk_ollama_data:/root/.ollama \
     -p 11434:11434 \
     --network translatorbk_translator-network \
