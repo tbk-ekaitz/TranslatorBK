@@ -115,39 +115,7 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}Step 2: Detecting CUDA availability...${NC}"
-echo ""
-
-# Detect if CUDA/GPU is available
-CUDA_AVAILABLE=false
-COMPOSE_FILE="docker-compose.yml"
-
-# Try to detect NVIDIA GPU
-if command -v nvidia-smi &> /dev/null; then
-    if nvidia-smi &> /dev/null; then
-        CUDA_AVAILABLE=true
-        echo -e "${GREEN}✓ NVIDIA GPU detected (CUDA available)${NC}"
-        echo -e "${YELLOW}  Using docker-compose.yml (GPU-accelerated)${NC}"
-        COMPOSE_FILE="docker-compose.yml"
-    fi
-fi
-
-# If nvidia-smi not found, try Docker GPU test
-if [ "$CUDA_AVAILABLE" = false ]; then
-    if docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi &> /dev/null; then
-        CUDA_AVAILABLE=true
-        echo -e "${GREEN}✓ NVIDIA GPU detected via Docker (CUDA available)${NC}"
-        echo -e "${YELLOW}  Using docker-compose.yml (GPU-accelerated)${NC}"
-        COMPOSE_FILE="docker-compose.yml"
-    else
-        echo -e "${YELLOW}⊘ No NVIDIA GPU detected (CUDA not available)${NC}"
-        echo -e "${YELLOW}  Using docker-compose.cpu.yml (CPU-only mode)${NC}"
-        COMPOSE_FILE="docker-compose.cpu.yml"
-    fi
-fi
-
-echo ""
-echo -e "${GREEN}Step 3: Starting Docker services...${NC}"
+echo -e "${GREEN}Step 2: Starting Docker services...${NC}"
 echo ""
 
 # Check if any ISSAI models are enabled (kazllm-8b or qolda)
@@ -171,10 +139,10 @@ fi
 # Start Docker Compose with or without ISSAI profile
 if [ "$USE_ISSAI_PROFILE" = true ]; then
     echo -e "${YELLOW}Starting with ISSAI models (llamacpp/qolda)...${NC}"
-    docker compose -f "$COMPOSE_FILE" --profile issai up -d
+    docker compose --profile issai up -d
 else
     echo -e "${YELLOW}Starting core services only (Ollama models)...${NC}"
-    docker compose -f "$COMPOSE_FILE" up -d
+    docker compose up -d
 fi
 
 echo ""
