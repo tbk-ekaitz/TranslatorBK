@@ -3,7 +3,6 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: translator-ollama
-    runtime: nvidia
     volumes:
       - ollama_data:/root/.ollama
     ports:
@@ -14,13 +13,20 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - CUDA_VISIBLE_DEVICES=0
+      - LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   # Backend API service
   backend:
@@ -75,7 +81,6 @@ services:
   llamacpp:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
     container_name: translator-llamacpp
-    runtime: nvidia
     profiles: ["issai"]  # Optional service - start with --profile issai
     volumes:
       - kazllm_models:/models
@@ -86,7 +91,14 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - CUDA_VISIBLE_DEVICES=0
+      - LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     command: >
       --server
       --host 0.0.0.0
@@ -109,7 +121,6 @@ services:
   qolda:
     image: issai/qolda:latest
     container_name: translator-qolda
-    runtime: nvidia
     profiles: ["issai"]  # Optional service - requires custom Docker image
     ports:
       - "8081:8000"
@@ -120,7 +131,14 @@ services:
       - MODEL_PATH=/app/models
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - CUDA_VISIBLE_DEVICES=0
+      - LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1"]
       interval: 30s
