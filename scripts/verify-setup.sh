@@ -77,7 +77,7 @@ done
 # Test API endpoint
 echo ""
 echo -n "Checking backend API... "
-if curl -s -f http://localhost:8000/health > /dev/null 2>&1; then
+if curl -s -f http://localhost:8000/api/health > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Responding${NC}"
 else
     echo -e "${RED}✗ Not responding${NC}"
@@ -101,7 +101,7 @@ if [ "$all_healthy" = true ]; then
     echo ""
     echo "You can now use the translation system:"
     echo "  Frontend: http://localhost:3000"
-    echo "  API Docs: http://localhost:8000/docs"
+    echo "  API Docs: http://localhost:8000/api/docs"
 else
     echo -e "${YELLOW}⚠ Some components need attention${NC}"
     echo ""
