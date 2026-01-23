@@ -13,7 +13,8 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+      - LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib/wsl/lib
+      - CUDA_VISIBLE_DEVICES=0
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 30s
@@ -91,7 +92,8 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+      - LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib/wsl/lib
+      - CUDA_VISIBLE_DEVICES=0
     deploy:
       resources:
         reservations:
@@ -131,7 +133,8 @@ services:
       - MODEL_PATH=/app/models
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+      - LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib/wsl/lib
+      - CUDA_VISIBLE_DEVICES=0
     deploy:
       resources:
         reservations:
