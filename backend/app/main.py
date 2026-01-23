@@ -343,7 +343,7 @@ async def translate_text_helper(text: str, source_language: str) -> TranslationR
     else:
         russian_result = TranslationResult(
             target_language="ru",
-            best_translation="",
+            best_translation="[Translation unavailable]",
             all_translations=[],
             evaluation_method=config_manager.settings.evaluation_method,
             evaluation_score=0.0
@@ -361,7 +361,7 @@ async def translate_text_helper(text: str, source_language: str) -> TranslationR
     else:
         kazakh_result = TranslationResult(
             target_language="kk",
-            best_translation="",
+            best_translation="[Translation unavailable]",
             all_translations=[],
             evaluation_method=config_manager.settings.evaluation_method,
             evaluation_score=0.0
