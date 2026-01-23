@@ -68,7 +68,7 @@ if "%KAZLLM_ENABLED%"=="true" (
     set KAZLLM_IN_VOLUME=%errorlevel%
 
     if "%KAZLLM_IN_VOLUME%"=="0" (
-        echo ✓ KazLLM-8B GGUF file found in Docker volume
+        echo [OK] KazLLM-8B GGUF file found in Docker volume
     ) else (
         REM Check if GGUF file exists in current directory
         if exist "%GGUF_FILENAME%" (
@@ -78,9 +78,9 @@ if "%KAZLLM_ENABLED%"=="true" (
             docker run --rm -v "%cd%:/source" -v translatorbk_kazllm_models:/models alpine cp /source/%GGUF_FILENAME% /models/
 
             if not errorlevel 1 (
-                echo ✓ GGUF file successfully copied to Docker volume
+                echo [OK] GGUF file successfully copied to Docker volume
             ) else (
-                echo ✗ Failed to copy GGUF file to Docker volume
+                echo [ERROR] Failed to copy GGUF file to Docker volume
                 pause
                 exit /b 1
             )
@@ -110,7 +110,7 @@ if "%KAZLLM_ENABLED%"=="true" (
         )
     )
 ) else (
-    echo ⊘ KazLLM-8B model is disabled in config.yaml (skipping)
+    echo [SKIP] KazLLM-8B model is disabled in config.yaml (skipping)
 )
 
 echo.
@@ -125,7 +125,7 @@ REM Try to detect NVIDIA GPU using nvidia-smi
 nvidia-smi >nul 2>&1
 if not errorlevel 1 (
     set CUDA_AVAILABLE=true
-    echo ✓ NVIDIA GPU detected (CUDA available)
+    echo [OK] NVIDIA GPU detected (CUDA available)
     echo   Using docker-compose.yml (GPU-accelerated)
     set COMPOSE_FILE=docker-compose.yml
 ) else (
@@ -133,11 +133,11 @@ if not errorlevel 1 (
     docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi >nul 2>&1
     if not errorlevel 1 (
         set CUDA_AVAILABLE=true
-        echo ✓ NVIDIA GPU detected via Docker (CUDA available)
+        echo [OK] NVIDIA GPU detected via Docker (CUDA available)
         echo   Using docker-compose.yml (GPU-accelerated)
         set COMPOSE_FILE=docker-compose.yml
     ) else (
-        echo ⊘ No NVIDIA GPU detected (CUDA not available)
+        echo [SKIP] No NVIDIA GPU detected (CUDA not available)
         echo   Using docker-compose.cpu.yml (CPU-only mode)
         set COMPOSE_FILE=docker-compose.cpu.yml
     )
