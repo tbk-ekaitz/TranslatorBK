@@ -147,6 +147,7 @@ services:
 networks:
   translator-network:
     external: true
+    name: translatorbk_translator-network
 
 volumes:
   ollama_data:
