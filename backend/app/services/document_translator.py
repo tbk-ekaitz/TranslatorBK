@@ -264,10 +264,20 @@ class DocumentTranslationService:
             for idx, fragment in enumerate(fragments):
                 try:
                     result = await translator_func(fragment, job.source_language)
+
+                    # Log if translations are empty
+                    russian_trans = result.russian.best_translation
+                    kazakh_trans = result.kazakh.best_translation
+
+                    if not russian_trans or not russian_trans.strip():
+                        print(f"WARNING: Empty Russian translation for fragment {idx}: '{fragment[:50]}'")
+                    if not kazakh_trans or not kazakh_trans.strip():
+                        print(f"WARNING: Empty Kazakh translation for fragment {idx}: '{fragment[:50]}'")
+
                     phrases.append(TranslatablePhrase(
                         original=fragment,
-                        russian=result.russian.best_translation,
-                        kazakh=result.kazakh.best_translation
+                        russian=russian_trans if russian_trans and russian_trans.strip() else None,
+                        kazakh=kazakh_trans if kazakh_trans and kazakh_trans.strip() else None
                     ))
                 except Exception as e:
                     print(f"Error translating fragment {idx}: {e}")
@@ -315,8 +325,8 @@ class DocumentTranslationService:
                 "phrases": [
                     {
                         "original": p.original,
-                        "russian": p.russian,
-                        "kazakh": p.kazakh
+                        "russian": p.russian if p.russian and p.russian.strip() else None,
+                        "kazakh": p.kazakh if p.kazakh and p.kazakh.strip() else None
                     }
                     for p in phrases
                 ]
