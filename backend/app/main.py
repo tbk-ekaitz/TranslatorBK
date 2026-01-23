@@ -51,7 +51,7 @@ async def root():
     }
 
 
-@app.get("/health", response_model=HealthResponse, tags=["Health"])
+@app.get("/api/health", response_model=HealthResponse, tags=["Health"])
 async def health_check():
     """Check API health and available models."""
     models = config_manager.get_enabled_models()
@@ -73,7 +73,7 @@ async def health_check():
     )
 
 
-@app.post("/translate", response_model=TranslationResponse, tags=["Translation"])
+@app.post("/api/translate", response_model=TranslationResponse, tags=["Translation"])
 async def translate(request: TranslationRequest):
     """
     Translate text from English or Traditional Chinese to Russian and Kazakh.
@@ -257,7 +257,7 @@ async def translate(request: TranslationRequest):
         )
 
 
-@app.get("/models", tags=["Configuration"])
+@app.get("/api/models", tags=["Configuration"])
 async def get_models():
     """Get list of configured models and their status."""
     models = config_manager.get_enabled_models()
