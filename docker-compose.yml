@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # Ollama service for local AI models
   ollama:
@@ -137,7 +139,8 @@ services:
 
 networks:
   translator-network:
-    driver: bridge
+    external: true
+    name: translatorbk_translator-network
 
 volumes:
   ollama_data:

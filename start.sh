@@ -51,7 +51,7 @@ GGUF_FILENAME="llama-3.1-kazllm-1.0-8b-q4_k_m.gguf"
 KAZLLM_ENABLED=false
 if [ -f "config.yaml" ]; then
     # Simple grep to check if kazllm-8b is enabled
-    if grep -A 3 "name: kazllm-8b" config.yaml | grep -q "enabled: true"; then
+    if grep -A 6 "name: kazllm-8b" config.yaml | grep -q "enabled: true"; then
         KAZLLM_ENABLED=true
     fi
 fi
@@ -147,10 +147,10 @@ echo ""
 # Check if any ISSAI models are enabled (kazllm-8b or qolda)
 USE_ISSAI_PROFILE=false
 if [ -f "config.yaml" ]; then
-    if grep -A 3 "name: kazllm-8b" config.yaml | grep -q "enabled: true"; then
+    if grep -A 6 "name: kazllm-8b" config.yaml | grep -q "enabled: true"; then
         USE_ISSAI_PROFILE=true
     fi
-    if grep -A 3 "name: qolda" config.yaml | grep -q "enabled: true"; then
+    if grep -A 6 "name: qolda" config.yaml | grep -q "enabled: true"; then
         USE_ISSAI_PROFILE=true
         # Si Qolda está activado pero no tenemos la imagen, la construimos ahora mismo.
         if ! docker image inspect issai/qolda:latest >/dev/null 2>&1; then
